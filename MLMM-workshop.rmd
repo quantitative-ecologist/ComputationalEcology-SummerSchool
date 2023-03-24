@@ -1,1 +1,267 @@
 
+---
+title: Analysis of predator forging behaviour using multivariate linear mixed effects models
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  html_document:
+    number_sections: yes
+    toc: yes
+    toc_float: yes
+    highlight: zenburn
+    theme: flatly
+    df_print: paged
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  fig.align = "center",
+  warning = FALSE, 
+  message = FALSE
+)
+```
+
+<br>
+
+
+
+# Overview
+
+
+
+## Case study
+
+Explain my study briefly
+
+<br>
+
+
+
+## The data
+
+Explain the dataset
+
+<br>
+
+
+
+## Load the libraries
+
+```{r}
+
+# libraries
+library(data.table)
+library(brms)
+library(ggplot2)
+
+```
+
+<br>
+
+
+
+## Load the data
+
+The data is hosted on a public repository on GitHub. We will export it from there.
+
+```{r}
+
+# Type the repository's URL
+github <- "https://raw.githubusercontent.com/quantitative-ecologist"
+repository <- "predator-foraging-mode-videogames"
+folder <- "main/data"
+
+# Import the data in our session
+data <- fread(
+  file.path(
+    github, repository,
+    folder, "FraserFrancoetal2022-data.csv"
+  ),
+  select = c(
+    "player_id", "avatar_id",
+    "hunting_success", "game_duration",
+    "speed", "space_covered_rate", "hook_start_time",
+    "prey_avg_speed", "prey_avg_space_covered_rate"
+  )
+)
+
+# Rename variables
+setnames(data, "hook_start_time", "latency_1st_capture")
+setnames(data, "speed", "pred_speed")
+setnames(data, "player_id", "predator_id")
+
+```
+
+### Inspect the data structure
+
+```{r}
+# Print the data
+data
+
+# Inspect the number of avatars
+length(unique(data$avatar_id))
+
+# Inspect the number of individual predators
+length(unique(data$predator_id))
+
+```
+
+### Visualize the distribution of our data
+```{r}
+
+# Reshape the data to plot multiple histograms -----------------------------------
+
+# Select the needed variables
+dat_hist <- data[
+  , .(
+    pred_speed, space_covered_rate,
+    prey_avg_speed, prey_avg_space_covered_rate,
+    latency_1st_capture, game_duration
+  )
+]
+
+# Reshape the table
+dat_hist <- melt(
+  data = dat_hist,
+  variable.name = "variable",
+  value.name = "value"
+)
+
+
+
+# Plot the histograms ------------------------------------------------------------
+
+p <- ggplot(data = dat_hist, aes(x = value)) +
+  geom_histogram(col = "black", fill = "gray") +
+  xlab("\nValue") +
+  ylab("Frequency\n") +
+  facet_wrap(~ variable, scales = "free") +
+  theme_bw() +
+  theme(panel.grid = element_blank())
+
+# Show figure
+p
+
+```
+
+<br>
+
+
+
+# Fitting a multivariate linear mixed effects model: Bayesian inference with the package `brms`
+
+
+
+## Standardizing our variables
+
+```{r}
+
+#standardize <- function (x) {
+#  (x - mean(x, na.rm = TRUE)) / sd(x, na.rm = TRUE)
+#}
+#
+#data[
+#  , c("Zgame_duration",
+#      "Zspeed",
+#      "Zspace_covered_rate",
+#      "Zhook_start_time") :=
+#  lapply(.SD, standardize),
+#  .SDcols = c(5:8)
+#]
+
+```
+
+<br>
+
+
+
+## Building the model
+
+### Model 1 - Hunting tactics without controlling for prey behaviour
+
+```{r}
+
+# Model for the predator's speed
+speed_form <- bf(
+  Zspeed ~
+  1 +
+  (1 | a | character_name) +
+  (1 | b | player_id)
+) + gaussian()
+
+# Model for the rate of space covered by the predator
+space_form <- bf(
+  Zspace_covered_rate ~
+  1 +
+  (1 | a | character_name) +
+  (1 | b | player_id)
+) + gaussian()
+
+# Model for the latency before the 1st capture
+hook_form <- bf(
+  Zhook_start_time ~
+  1 +
+  Zgame_duration +
+  (1 | a | character_name) +
+  (1 | b | player_id)
+) + gaussian()
+
+```
+
+
+### Model 2 - Hunting tactics controlling for prey behaviour
+
+<br>
+
+
+
+## Setting up priors
+
+```{r}
+
+priors <- c(
+  # priors on fixed effects
+  set_prior("normal(0, 2)",
+            class = "b",
+            coef = "Zgame_duration",
+            resp = "Zhookstarttime"),
+  # priors on var. parameters (brms automatically detects half-normal)
+  set_prior("normal(0, 1)",
+            class = "sd", # applies to all variance parameters
+            resp = c("Zspeed", "Zspacecoveredrate", "Zhookstarttime")),
+  # priors on the variance-covariance matrices
+  set_prior("lkj(2)",
+            class = "cor",
+            group = "character_name"),
+  set_prior("lkj(2)",
+            class = "cor",
+            group = "player_id")
+)
+
+```
+
+
+## Run the models
+
+```{r}
+
+
+#mv_model <- brm(speed_form +
+#                space_form +
+#                guard_form +   
+#                hook_form +
+#                set_rescor(TRUE),
+#                warmup = 500, 
+#                iter = 2500,
+#                thin = 8,
+#                chains = 4, 
+#                inits = "0",
+#                threads = threading(10),
+#                backend = "cmdstanr",
+#                seed = 123,
+#                prior = priors,
+#                control = list(adapt_delta = 0.95),
+#               # save_pars = save_pars(all = TRUE),
+#                sample_prior = TRUE,
+#                data = data)
+
+```
