@@ -1,6 +1,19 @@
 
 ---
 title: Analysis of predator forging behaviour using multivariate linear mixed effects models
+author:
+  - name: Maxime Fraser Franco
+    affiliation: Département des Sciences Biologiques & Centre de la Science de la Biodiversité du Québec, Université du Québec à Montréal
+    email: fraser_franco.maxime@courrier.uqam.ca
+  - name: Pierre-Olivier Montiglio
+    affiliation: Département des Sciences Biologiques & Centre de la Science de la Biodiversité du Québec, Université du Québec à Montréal
+    email: montiglio.pierre-olivier@uqam.ca
+  - name: Pierre-Legagneux
+    affiliation: Département de Biologie & Centre d'Études Nordiques, Université Laval
+    email: Pierre.Legagneux@bio.ulaval.ca
+  - name: Daniel Fortin
+    affiliation: Département de Biologie & Centre d'étude de la forêt, Université Laval
+    email: Daniel.Fortin@bio.ulaval.ca
 date: "`r format(Sys.time(), '%d %B, %Y')`"
 output:
   html_document:
@@ -28,7 +41,7 @@ knitr::opts_chunk$set(
 
 
 
-## Case study
+# Case study
 
 Explain my study briefly
 
@@ -36,7 +49,7 @@ Explain my study briefly
 
 
 
-## The data
+# The data
 
 Explain the dataset
 
@@ -45,6 +58,12 @@ Explain the dataset
 
 
 ## Load the libraries
+
+In this tutorial, we will use the [`data.table`](https://rdatatable.gitlab.io/data.table/index.html) R package for data wrangling. `data.table` is a fast and very useful package for data science in general, and is great for manipulating large datasets. It operates similarly to base R's `data.frame`.
+
+We will fit all our models using the package [`brms`](https://paul-buerkner.github.io/brms/), which is an R front-end for the probabilistic language [STAN](https://mc-stan.org/) software. `brms` uses Hamiltonian Monte Carlo (HMC) and the no-U-turn sampler (NUTS) to estimate the model parameters.
+
+Lastly, we use the [`ggplot2`](https://ggplot2.tidyverse.org/) R package for our plots.
 
 ```{r}
 
@@ -59,7 +78,7 @@ library(ggplot2)
 
 
 
-## Load the data
+## Import the data
 
 The data is hosted on a public repository on GitHub. We will export it from there.
 
@@ -91,8 +110,13 @@ setnames(data, "player_id", "predator_id")
 
 ```
 
-### Inspect the data structure
+<br>
 
+
+
+## Data exploration
+
+### Data structure
 ```{r}
 # Print the data
 data
@@ -105,8 +129,8 @@ length(unique(data$predator_id))
 
 ```
 
-### Visualize the distribution of our data
-```{r}
+### Distribution of variables
+```{r, fig.asp = 0.8}
 
 # Reshape the data to plot multiple histograms -----------------------------------
 
@@ -136,7 +160,7 @@ p <- ggplot(data = dat_hist, aes(x = value)) +
   ylab("Frequency\n") +
   facet_wrap(~ variable, scales = "free") +
   theme_bw() +
-  theme(panel.grid = element_blank())
+  theme(panel.grid = element_blank(), base_size = 12)
 
 # Show figure
 p
