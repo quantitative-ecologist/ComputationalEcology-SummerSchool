@@ -110,16 +110,16 @@ data[
 speed_form1 <- bf(
   Zpred_speed ~
   1 +
-  (1 | a | character_name) +
-  (1 | b | player_id)
+  (1 | a | avatar_id) +
+  (1 | b | predator_id)
 ) + gaussian()
 
 # Model for the rate of space covered by the predator
 space_form1 <- bf(
   Zspace_covered_rate ~
   1 +
-  (1 | a | character_name) +
-  (1 | b | player_id)
+  (1 | a | avatar_id) +
+  (1 | b | predator_id)
 ) + gaussian()
 
 # Model for the latency before the 1st capture
@@ -127,8 +127,8 @@ hook_form1 <- bf(
   Zlatency_1st_capture ~
   1 +
   Zgame_duration +
-  (1 | a | character_name) +
-  (1 | b | player_id)
+  (1 | a | avatar_id) +
+  (1 | b | predator_id)
 ) + gaussian()
 
 
@@ -141,8 +141,8 @@ speed_form2 <- bf(
   1 +
   Zprey_avg_speed +
   Zprey_avg_space_covered_rate +
-  (1 | a | character_name) +
-  (1 | b | player_id)
+  (1 | a | avatar_id) +
+  (1 | b | predator_id)
 ) + gaussian()
 
 # Model for the rate of space covered by the predator
@@ -151,8 +151,8 @@ space_form2 <- bf(
   1 +
   Zprey_avg_speed +
   Zprey_avg_space_covered_rate +
-  (1 | a | character_name) +
-  (1 | b | player_id)
+  (1 | a | avatar_id) +
+  (1 | b | predator_id)
 ) + gaussian()
 
 # Model for the latency before the 1st capture
@@ -162,8 +162,8 @@ hook_form2 <- bf(
   Zprey_avg_speed +
   Zprey_avg_space_covered_rate +
   Zgame_duration +
-  (1 | a | character_name) +
-  (1 | b | player_id)
+  (1 | a | avatar_id) +
+  (1 | b | predator_id)
 ) + gaussian()
 
 
@@ -194,7 +194,7 @@ priors1 <- c(
   set_prior(
     "lkj(2)",
     class = "cor",
-    group = "player_id"
+    group = "predator_id"
   )
 )
 
