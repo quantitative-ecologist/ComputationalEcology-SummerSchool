@@ -39,6 +39,8 @@ knitr::opts_chunk$set(
 
 # Overview
 
+<br>
+
 
 
 # Case study
@@ -54,9 +56,6 @@ The code to reproduce all the analyse presented in the article is available on [
 # The data
 
 Explain the dataset
-
-<br>
-
 
 
 ## Load the libraries
@@ -75,9 +74,6 @@ library(brms)
 library(ggplot2)
 
 ```
-
-<br>
-
 
 
 ## Import the data
@@ -111,9 +107,6 @@ setnames(data, "speed", "pred_speed")
 setnames(data, "player_id", "predator_id")
 
 ```
-
-<br>
-
 
 
 ## Data exploration
@@ -173,7 +166,7 @@ p <- ggplot(data = dat_hist, aes(x = value)) +
   ylab("Frequency\n") +
   facet_wrap(~ variable, scales = "free", labeller = labels) +
   theme_bw(base_size = 12) +
-  theme(panel.grid = element_blank(), strip.text = element_text(size = 11))
+  theme(panel.grid = element_blank(), strip.text = element_text(size = 8))
 
 # Show figure
 p
@@ -185,7 +178,6 @@ p
 
 
 # Fitting a multivariate linear mixed effects model: Bayesian inference with the package `brms`
-
 
 
 ## Transforming and standardizing our variables
@@ -217,9 +209,6 @@ data[
 ]
 
 ```
-
-<br>
-
 
 
 ## Building the model
@@ -254,7 +243,6 @@ hook_form1 <- bf(
 ) + gaussian()
 
 ```
-
 
 ### Model 2 - Hunting tactics controlling for prey behaviour
 
@@ -293,11 +281,7 @@ hook_form2 <- bf(
 
 ```
 
-<br>
-
-
-
-## Setting up priors
+### Setting up priors
 
 ```{r}
 
@@ -348,12 +332,24 @@ priors2 <- c(
 
 Here is the basic function to run the models using `brms`. Because both models take a lot of time to estimate all the parameters, we will directly import their resulting R objects into our session. Thus, whenever you run a model that takes a very long time to compute, you should save the output into an R object and save it in a directory to reuse it later (e.g. for plots, tables, etc.).
 
-Code for Model 1 where we do not account for prey behaviour :
+**Import the model into our session**
+
+```{r eval = FALSE}
+
+path <- file.path(getwd())
+
+fit1 <- readRDS(file.path(path, "mv_model1.rds"))
+fit2 <- readRDS(file.path(path, "mv_model2.rds"))
+
+```
+
+
+**Code for Model 1 where we do not account for prey behaviour :**
 
 ```{r eval = FALSE}
 
 # Model 1
-mv_model1 <- brm(
+fit1 <- brm(
   # The three model formulas are summed
   speed_form1 +
   space_form1 +
@@ -385,16 +381,16 @@ mv_model1 <- brm(
 
 # Save the object to a specified folder path
 my_path <- file.path(getwd(), "your_folder")
-saveRDS(mv_model1, path = file.path(my_path, "mv_model1.rds"))
+saveRDS(fit1, path = file.path(my_path, "mv_model1.rds"))
 
 ```
 
-Code for Model 2 where we control for prey behaviour :
+**Code for Model 2 where we control for prey behaviour :**
 
 ```{r eval = FALSE}
 
 # Model 1
-mv_model2 <- brm(
+fit2 <- brm(
   # The three model formulas are summed
   speed_form2 +
   space_form2 +
@@ -426,6 +422,37 @@ mv_model2 <- brm(
 
 # Save the object to a specified folder path
 my_path <- file.path(getwd(), "your_folder")
-saveRDS(mv_model2, path = file.path(my_path, "mv_model2.rds"))
+saveRDS(fit2, path = file.path(my_path, "mv_model2.rds"))
 
 ```
+
+
+## Model verification
+
+### Inspect chains
+
+```{r eval = FALSE}
+
+```
+
+### Inspect model fit
+
+```{r eval = FALSE}
+
+```
+
+### Inspect overlap between prior and posterior distributions
+
+```{r eval = FALSE}
+
+```
+
+<br>
+
+
+
+# Interpret the models' results
+
+## Fixed effects - population-level parameters
+
+## Random effects - group-level parameters
