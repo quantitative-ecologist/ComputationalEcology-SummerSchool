@@ -33,7 +33,7 @@ library(parallel)
 # Import dataset --------------------------------------------------------
 
 # Folder path Compute Canada
-folder <- file.path("/home", "maxime11", "projects", "def-monti", 
+folder <- file.path("/home", "maxime11", "projects", "def-monti",
                     "maxime11", "phd_project", "data")
 
 # Import the data
