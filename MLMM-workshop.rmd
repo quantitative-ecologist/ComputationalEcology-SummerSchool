@@ -43,7 +43,9 @@ knitr::opts_chunk$set(
 
 # Case study
 
-Explain my study briefly
+Explain my study briefly.
+
+The code to reproduce all the analyse presented in the article is available on [GitHub](https://github.com/quantitative-ecologist/predator-foraging-mode-videogames)
 
 <br>
 
@@ -130,7 +132,7 @@ length(unique(data$predator_id))
 ```
 
 ### Distribution of variables
-```{r, fig.asp = 0.8}
+```{r, out.width="100%", out.height="70%"}
 
 # Reshape the data to plot multiple histograms -----------------------------------
 
@@ -154,13 +156,24 @@ dat_hist <- melt(
 
 # Plot the histograms ------------------------------------------------------------
 
+# Panel labels
+labels <- labeller(
+  variable =
+  c("pred_speed" = "Predator speed",
+    "space_covered_rate" = "Rate of space coverage",
+    "prey_avg_speed" = "Prey speed",
+    "prey_avg_space_covered_rate" = "Prey's rate of space coverage",
+    "latency_1st_capture" = "Latency for 1st capture",
+    "game_duration" = "Game duration")
+)
+
 p <- ggplot(data = dat_hist, aes(x = value)) +
   geom_histogram(col = "black", fill = "gray") +
   xlab("\nValue") +
   ylab("Frequency\n") +
-  facet_wrap(~ variable, scales = "free") +
-  theme_bw() +
-  theme(panel.grid = element_blank(), base_size = 12)
+  facet_wrap(~ variable, scales = "free", labeller = labels) +
+  theme_bw(base_size = 12) +
+  theme(panel.grid = element_blank(), strip.text = element_text(size = 11))
 
 # Show figure
 p
@@ -175,22 +188,33 @@ p
 
 
 
-## Standardizing our variables
+## Transforming and standardizing our variables
 
 ```{r}
 
-#standardize <- function (x) {
-#  (x - mean(x, na.rm = TRUE)) / sd(x, na.rm = TRUE)
-#}
-#
-#data[
-#  , c("Zgame_duration",
-#      "Zspeed",
-#      "Zspace_covered_rate",
-#      "Zhook_start_time") :=
-#  lapply(.SD, standardize),
-#  .SDcols = c(5:8)
-#]
+# Transform our variables
+data[, ":=" (
+  latency_1st_capture = log(latency_1st_capture + 1),
+  game_duration = sqrt(game_duration)
+  )
+]
+
+
+# Standardize the variables
+standardize <- function (x) {
+  (x - mean(x, na.rm = TRUE)) / sd(x, na.rm = TRUE)
+}
+
+data[
+  , c("Zgame_duration",
+      "Zpred_speed",
+      "Zspace_covered_rate",
+      "Zlatency_1st_capture",
+      "Zprey_avg_speed", 
+      "Zprey_avg_space_covered_rate") :=
+  lapply(.SD, standardize),
+  .SDcols = c(4:9)
+]
 
 ```
 
@@ -205,15 +229,15 @@ p
 ```{r}
 
 # Model for the predator's speed
-speed_form <- bf(
-  Zspeed ~
+speed_form1 <- bf(
+  Zpred_speed ~
   1 +
   (1 | a | character_name) +
   (1 | b | player_id)
 ) + gaussian()
 
 # Model for the rate of space covered by the predator
-space_form <- bf(
+space_form1 <- bf(
   Zspace_covered_rate ~
   1 +
   (1 | a | character_name) +
@@ -221,8 +245,8 @@ space_form <- bf(
 ) + gaussian()
 
 # Model for the latency before the 1st capture
-hook_form <- bf(
-  Zhook_start_time ~
+hook_form1 <- bf(
+  Zlatency_1st_capture ~
   1 +
   Zgame_duration +
   (1 | a | character_name) +
@@ -234,6 +258,41 @@ hook_form <- bf(
 
 ### Model 2 - Hunting tactics controlling for prey behaviour
 
+```{r}
+
+# Model for the predator's speed
+speed_form2 <- bf(
+  Zpred_speed ~
+  1 +
+  Zprey_avg_speed +
+  Zprey_avg_space_covered_rate +
+  (1 | a | character_name) +
+  (1 | b | player_id)
+) + gaussian()
+
+# Model for the rate of space covered by the predator
+space_form2 <- bf(
+  Zspace_covered_rate ~
+  1 +
+  Zprey_avg_speed +
+  Zprey_avg_space_covered_rate +
+  (1 | a | character_name) +
+  (1 | b | player_id)
+) + gaussian()
+
+# Model for the latency before the 1st capture
+hook_form2 <- bf(
+  Zlatency_1st_capture ~
+  1 +
+  Zprey_avg_speed +
+  Zprey_avg_space_covered_rate +
+  Zgame_duration +
+  (1 | a | character_name) +
+  (1 | b | player_id)
+) + gaussian()
+
+```
+
 <br>
 
 
@@ -242,23 +301,44 @@ hook_form <- bf(
 
 ```{r}
 
-priors <- c(
+# Priors for model 1
+priors1 <- c(
   # priors on fixed effects
-  set_prior("normal(0, 2)",
-            class = "b",
-            coef = "Zgame_duration",
-            resp = "Zhookstarttime"),
+  set_prior(
+    "normal(0, 2)",
+    class = "b",
+    coef = "Zgame_duration",
+    resp = "Zlatency1stcapture"
+  ),
   # priors on var. parameters (brms automatically detects half-normal)
-  set_prior("normal(0, 1)",
-            class = "sd", # applies to all variance parameters
-            resp = c("Zspeed", "Zspacecoveredrate", "Zhookstarttime")),
+  set_prior(
+    "normal(0, 1)",
+    class = "sd", # applies to all variance parameters
+    resp = c("Zpredspeed", "Zspacecoveredrate", "Zlatency1stcapture")
+  ),
   # priors on the variance-covariance matrices
-  set_prior("lkj(2)",
-            class = "cor",
-            group = "character_name"),
-  set_prior("lkj(2)",
-            class = "cor",
-            group = "player_id")
+  set_prior(
+    "lkj(2)",
+    class = "cor",
+    group = "avatar_id"
+  ),
+  set_prior(
+    "lkj(2)",
+    class = "cor",
+    group = "player_id"
+  )
+)
+
+# Priors for model 2
+priors2 <- c(
+  priors1,
+  set_prior(
+    "normal(0, 2)",
+    class = "b",
+    coef = c("Zprey_avg_speed", "Zprey_avg_space_covered_rate"),
+    resp = c("Zpredspeed", "Zspacecoveredrate", "Zlatency1stcapture",
+             "Zpredspeed", "Zspacecoveredrate", "Zlatency1stcapture")
+  )
 )
 
 ```
@@ -266,26 +346,86 @@ priors <- c(
 
 ## Run the models
 
-```{r}
+Here is the basic function to run the models using `brms`. Because both models take a lot of time to estimate all the parameters, we will directly import their resulting R objects into our session. Thus, whenever you run a model that takes a very long time to compute, you should save the output into an R object and save it in a directory to reuse it later (e.g. for plots, tables, etc.).
 
+Code for Model 1 where we do not account for prey behaviour :
 
-#mv_model <- brm(speed_form +
-#                space_form +
-#                guard_form +   
-#                hook_form +
-#                set_rescor(TRUE),
-#                warmup = 500, 
-#                iter = 2500,
-#                thin = 8,
-#                chains = 4, 
-#                inits = "0",
-#                threads = threading(10),
-#                backend = "cmdstanr",
-#                seed = 123,
-#                prior = priors,
-#                control = list(adapt_delta = 0.95),
-#               # save_pars = save_pars(all = TRUE),
-#                sample_prior = TRUE,
-#                data = data)
+```{r eval = FALSE}
+
+# Model 1
+mv_model1 <- brm(
+  # The three model formulas are summed
+  speed_form1 +
+  space_form1 +
+  hook_form1 +
+  # To estimate residual correlations
+  # i.e. inference about behavioural plasticity
+  set_rescor(TRUE),
+  # MCMC settings to obtain 1000 posterior samples
+  # (iter - warmups) / thin * chains
+  warmup = 500,
+  iter = 2500,
+  thin = 8,
+  chains = 4,
+  # Initialize parameter values at 0
+  inits = "0",
+  # Within-chain parallelization :
+  # Use only if you have access to multiple computer cores
+  threads = threading(10),
+  # Software backend for MCMC estimation
+  backend = "cmdstanr",
+  seed = 123,
+  prior = priors1,
+  # Helps MCMC convergence
+  control = list(adapt_delta = 0.95),
+  # Sample priors to later compare priors vs posterior distributions
+  sample_prior = TRUE,
+  data = data
+)
+
+# Save the object to a specified folder path
+my_path <- file.path(getwd(), "your_folder")
+saveRDS(mv_model1, path = file.path(my_path, "mv_model1.rds"))
+
+```
+
+Code for Model 2 where we control for prey behaviour :
+
+```{r eval = FALSE}
+
+# Model 1
+mv_model2 <- brm(
+  # The three model formulas are summed
+  speed_form2 +
+  space_form2 +
+  hook_form2 +
+  # To estimate residual correlations
+  # i.e. inference about behavioural plasticity
+  set_rescor(TRUE),
+  # MCMC settings to obtain 1000 posterior samples
+  # (iter - warmups) / thin * chains
+  warmup = 500,
+  iter = 2500,
+  thin = 8,
+  chains = 4,
+  # Initialize parameter values at 0
+  inits = "0",
+  # Within-chain parallelization :
+  # Use only if you have access to multiple computer cores
+  threads = threading(10),
+  # Software backend for MCMC estimation
+  backend = "cmdstanr",
+  seed = 123,
+  prior = priors,
+  # Helps MCMC convergence
+  control = list(adapt_delta = 0.95),
+  # Sample priors to later compare priors vs posterior distributions
+  sample_prior = TRUE,
+  data = data
+)
+
+# Save the object to a specified folder path
+my_path <- file.path(getwd(), "your_folder")
+saveRDS(mv_model2, path = file.path(my_path, "mv_model2.rds"))
 
 ```
