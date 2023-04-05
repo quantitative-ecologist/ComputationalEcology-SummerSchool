@@ -23,6 +23,9 @@ output:
     highlight: zenburn
     theme: flatly
     df_print: paged
+bibliography: references.bib
+nocite: |
+  @McElreath2020
 ---
 
 ```{r, include = FALSE}
@@ -64,7 +67,7 @@ In this tutorial, we will use the [`data.table`](https://rdatatable.gitlab.io/da
 
 We will fit all our models using the package [`brms`](https://paul-buerkner.github.io/brms/), which is an R front-end for the probabilistic language [STAN](https://mc-stan.org/) software. `brms` uses Hamiltonian Monte Carlo (HMC) and the no-U-turn sampler (NUTS) to estimate the model parameters.
 
-Lastly, we use the [`ggplot2`](https://ggplot2.tidyverse.org/) R package for our plots.
+Lastly, we use the [`ggplot2`](https://ggplot2.tidyverse.org/) R package for our plots, and [`ggpubr`](https://rpkgs.datanovia.com/ggpubr/index.html) to combine multiple plots together.
 
 ```{r}
 
@@ -72,6 +75,7 @@ Lastly, we use the [`ggplot2`](https://ggplot2.tidyverse.org/) R package for our
 library(data.table)
 library(brms)
 library(ggplot2)
+library(ggpubr)
 
 ```
 
@@ -334,9 +338,9 @@ Here is the basic function to run the models using `brms`. Because both models t
 
 **Import the model into our session**
 
-```{r eval = FALSE}
+```{r}
 
-path <- file.path(getwd())
+path <- file.path(getwd(), "models")
 
 fit1 <- readRDS(file.path(path, "mv_model1.rds"))
 fit2 <- readRDS(file.path(path, "mv_model2.rds"))
@@ -381,7 +385,7 @@ fit1 <- brm(
 
 # Save the object to a specified folder path
 my_path <- file.path(getwd(), "your_folder")
-saveRDS(fit1, path = file.path(my_path, "mv_model1.rds"))
+saveRDS(fit1, file = file.path(my_path, "mv_model1.rds"))
 
 ```
 
@@ -422,7 +426,7 @@ fit2 <- brm(
 
 # Save the object to a specified folder path
 my_path <- file.path(getwd(), "your_folder")
-saveRDS(fit2, path = file.path(my_path, "mv_model2.rds"))
+saveRDS(fit2, file = file.path(my_path, "mv_model2.rds"))
 
 ```
 
@@ -433,13 +437,75 @@ saveRDS(fit2, path = file.path(my_path, "mv_model2.rds"))
 
 ```{r eval = FALSE}
 
+plot(fit1)
+
 ```
 
 ### Inspect model fit
 
+We first do posterior predictive checks
+
 ```{r eval = FALSE}
 
+# Compute the posterior predictive plots -----------------------------------------
+
+# Model 1
+pp1a <- pp_check(fit1, resp = "Zpredspeed") +
+  ggtitle("Speed")
+pp1b <- pp_check(fit1, resp = "Zspacecoveredrate") +
+  ggtitle("Rate of space covered")
+pp1c <- pp_check(fit1, resp = "Zlatency1stcapture") +
+  ggtitle("Latency 1st capture")
+
+# Model 2
+pp2a <- pp_check(fit2, resp = "Zpredspeed") +
+  ggtitle("Speed")
+pp2b <- pp_check(fit2, resp = "Zspacecoveredrate") +
+  ggtitle("Rate of space covered")
+pp2c <- pp_check(fit2, resp = "Zlatency1stcapture") +
+  ggtitle("Latency 1st capture")
+
+
+
+# Combine into one figure --------------------------------------------------------
+
+# Combine into a figure
+fig1 <- ggarrange(
+  pp1a, pp1b, pp1c,
+  ncol = 2, nrow = 2,
+  common.legend = TRUE
+)
+
+fig2 <- ggarrange(
+  pp2a, pp2b, pp2c,
+  ncol = 2, nrow = 2,
+  common.legend = TRUE
+)
+
+# Save the figures
+saveRDS(fig1, file = file.path(getwd(), "plots", "fig1.rds"))
+saveRDS(fig2, file = file.path(getwd(), "plots", "fig2.rds"))
+
 ```
+
+Posterior predictive plots for model 1
+```{r out.width="100%", out.height="70%"}
+fig1 <- readRDS(file.path(getwd(), "plots", "fig1.rds"))
+fig1
+
+```
+
+Posterior predictive plots for model 2
+```{r out.width="100%", out.height="70%"}
+fig2 <- readRDS(file.path(getwd(), "plots", "fig2.rds"))
+fig2
+
+```
+
+
+We then inspect how well the model captured the mean
+
+
 
 ### Inspect overlap between prior and posterior distributions
 
@@ -456,3 +522,10 @@ saveRDS(fit2, path = file.path(my_path, "mv_model2.rds"))
 ## Fixed effects - population-level parameters
 
 ## Random effects - group-level parameters
+
+<br>
+
+
+# References {.unnumbered}
+
+<div id="refs"></div>
