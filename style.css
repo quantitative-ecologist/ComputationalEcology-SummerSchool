@@ -3,7 +3,7 @@
 #TOC::before {
   content: "";
   display: block;
-  height: 200px;
+  height: 100px;
   margin: 2em 20px 40px 20px;
   background-image: url("plots/logoSN.png");
   background-size: contain;
