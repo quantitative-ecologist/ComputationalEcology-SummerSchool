@@ -1,6 +1,7 @@
 
 ---
-title: Analysis of predator forging behaviour using multivariate linear mixed effects models
+title: Sentinelle Nord Advanced Field School in Computational Ecology
+subtitle: Analysis of predator foraging behaviour using multivariate linear mixed models
 author:
   - name: Maxime Fraser Franco
     affiliation: Département des Sciences Biologiques & Centre de la Science de la Biodiversité du Québec, Université du Québec à Montréal
@@ -8,39 +9,42 @@ author:
   - name: Pierre-Olivier Montiglio
     affiliation: Département des Sciences Biologiques & Centre de la Science de la Biodiversité du Québec, Université du Québec à Montréal
     email: montiglio.pierre-olivier@uqam.ca
-  - name: Pierre-Legagneux
-    affiliation: Département de Biologie & Centre d'Études Nordiques, Université Laval
-    email: Pierre.Legagneux@bio.ulaval.ca
-  - name: Daniel Fortin
-    affiliation: Département de Biologie & Centre d'étude de la forêt, Université Laval
-    email: Daniel.Fortin@bio.ulaval.ca
 date: "`r format(Sys.time(), '%d %B, %Y')`"
 output:
   html_document:
+    css: style.css
     number_sections: yes
     toc: yes
     toc_float: yes
     highlight: zenburn
     theme: flatly
     df_print: paged
+    code_folding: show
 bibliography: references.bib
 nocite: |
   @McElreath2020
+  @Burkner2017
+  @Burkner2018
+  @FraserFranco.etal2022
 ---
 
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
   fig.align = "center",
-  warning = FALSE, 
+  warning = FALSE,
   message = FALSE
 )
 ```
+
+---
 
 <br>
 
 
 
 # Overview
+
+This workshop is part of the [Sentinelle Nord advanced field school in computational ecology](http://dev.sentinellenord.ulaval.ca/en/ecology2023) held in may 2023 in Val-Morin, Québec, Canada.
 
 <br>
 
@@ -50,7 +54,9 @@ knitr::opts_chunk$set(
 
 Explain my study briefly.
 
-The code to reproduce all the analyse presented in the article is available on [GitHub](https://github.com/quantitative-ecologist/predator-foraging-mode-videogames)
+The code to reproduce all the analyse presented in the article is available on [GitHub](https://github.com/quantitative-ecologist/predator-foraging-mode-videogames).
+
+Here, we will work with a simpler version of the models presented in the paper. All the results presented in the present workshop can be reproduced using the files provided in this [GitHub repository](https://github.com/quantitative-ecologist/ComputationEcology-SummerSchool)
 
 <br>
 
@@ -76,7 +82,6 @@ library(data.table)
 library(brms)
 library(ggplot2)
 library(ggpubr)
-
 ```
 
 
@@ -109,7 +114,6 @@ data <- fread(
 setnames(data, "hook_start_time", "latency_1st_capture")
 setnames(data, "speed", "pred_speed")
 setnames(data, "player_id", "predator_id")
-
 ```
 
 
@@ -125,11 +129,10 @@ length(unique(data$avatar_id))
 
 # Inspect the number of individual predators
 length(unique(data$predator_id))
-
 ```
 
 ### Distribution of variables
-```{r, out.width="100%", out.height="70%"}
+```{r histograms-data, out.width="100%", out.height="70%"}
 
 # Reshape the data to plot multiple histograms -----------------------------------
 
@@ -174,14 +177,13 @@ p <- ggplot(data = dat_hist, aes(x = value)) +
 
 # Show figure
 p
-
 ```
 
 <br>
 
 
 
-# Fitting a multivariate linear mixed effects model: Bayesian inference with the package `brms`
+# Fitting multivariate linear mixed effects model with `brms`
 
 
 ## Transforming and standardizing our variables
@@ -211,13 +213,19 @@ data[
   lapply(.SD, standardize),
   .SDcols = c(4:9)
 ]
-
 ```
 
 
-## Building the model
+## Building the models
 
 ### Model 1 - Hunting tactics without controlling for prey behaviour
+
+The following block of code shows the formula for the three traits we are modelling :
+- The predators's speed
+- The predator's rate of space covered
+- The predator's latency before the first prey is captured
+
+We use the `bf()` in `brms` to write the model formulas. For the predator's speed and rate of space covered, the model estimates a general intercept and two random effects which are the `avatar_id` and the `predator_id`. The model for the predator's latency before the first capture follows the same structure, but we include the match duration (`Zgame_duration`) as a fixed effect to control for differences in game lenght. The three sub models are modeled assuming a Gaussian distribution family of the residuals.
 
 ```{r}
 
@@ -245,10 +253,11 @@ hook_form1 <- bf(
   (1 | a | avatar_id) +
   (1 | b | predator_id)
 ) + gaussian()
-
 ```
 
 ### Model 2 - Hunting tactics controlling for prey behaviour
+
+The second model follows the same structure as the first, but includes the average speed and rate of space covered of the prey group (`Zprey_avg_speed` and `Zprey_avg_space_covered_rate`) as fixed effects for the three predator traits.
 
 ```{r}
 
@@ -282,10 +291,15 @@ hook_form2 <- bf(
   (1 | a | avatar_id) +
   (1 | b | predator_id)
 ) + gaussian()
-
 ```
 
 ### Setting up priors
+
+Lastly, the Bayesian approach requires that we define priors for the parameters that the models will estimate. (brief explanation here).You can read more on priors in the following sources :
+
+- source1
+- source2
+- source3
 
 ```{r}
 
@@ -328,15 +342,16 @@ priors2 <- c(
              "Zpredspeed", "Zspacecoveredrate", "Zlatency1stcapture")
   )
 )
-
 ```
 
 
 ## Run the models
 
-Here is the basic function to run the models using `brms`. Because both models take a lot of time to estimate all the parameters, we will directly import their resulting R objects into our session. Thus, whenever you run a model that takes a very long time to compute, you should save the output into an R object and save it in a directory to reuse it later (e.g. for plots, tables, etc.).
-
 **Import the model into our session**
+
+Estimating model parameters with MCMC can take a long time. You should thus save your models outputs as R objects when they are finished running. You can then reupload the model objects into an R session and manipulate them for your needs (e.g. for plots and tables).
+
+This is what we do here, we will directly import the two model outputs from our "models" folder (`.rds` files) as R objects into our session.
 
 ```{r}
 
@@ -344,11 +359,12 @@ path <- file.path(getwd(), "models")
 
 fit1 <- readRDS(file.path(path, "mv_model1.rds"))
 fit2 <- readRDS(file.path(path, "mv_model2.rds"))
-
 ```
 
 
 **Code for Model 1 where we do not account for prey behaviour :**
+
+Here is the `brms` code that was used to run the first model (`fit1`) that we just imported. We used the `brm()` function to parameterize and initiate the sampling.
 
 ```{r eval = FALSE}
 
@@ -386,10 +402,11 @@ fit1 <- brm(
 # Save the object to a specified folder path
 my_path <- file.path(getwd(), "your_folder")
 saveRDS(fit1, file = file.path(my_path, "mv_model1.rds"))
-
 ```
 
 **Code for Model 2 where we control for prey behaviour :**
+
+And here is the `brms` code used to fit the second model, where we controlled for the prey's behaviour (`fit1`).
 
 ```{r eval = FALSE}
 
@@ -427,27 +444,53 @@ fit2 <- brm(
 # Save the object to a specified folder path
 my_path <- file.path(getwd(), "your_folder")
 saveRDS(fit2, file = file.path(my_path, "mv_model2.rds"))
-
 ```
 
 
-## Model verification
+## Model diagnostics
 
-### Inspect chains
+### Assess model convergence
 
-```{r eval = FALSE}
+We first inspect the convergence of the chains for every parameter of interest using trace plots. We can deduce that the chains converged well when the trace plots are homogeneous.
 
-plot(fit1)
+We start by extracting the model parameters that we want in a `data.frame`.
 
+```{r}
+
+params <- as_draws_df(
+  fit1, add_chain = TRUE,
+  variable = c("^b_", "^sd", "^cor_", "^rescor_"),
+  regex = TRUE
+)
 ```
 
-### Inspect model fit
+Inspect the trace plots for the beta parameters (intercepts + slopes)
 
-We first do posterior predictive checks
+```{r trace1, out.width="90%", out.height="70%"}
+bayesplot::mcmc_trace(params, regex_pars = "b", np = nuts_params(fit1))
+```
 
-```{r eval = FALSE}
+Inspect the trace plots for the standard deviation parameters (random effects)
 
-# Compute the posterior predictive plots -----------------------------------------
+```{r trace2, out.width="90%", out.height="50%"}
+bayesplot::mcmc_trace(params, regex_pars = "sd", np = nuts_params(fit1))
+```
+
+Inspect the trace plots for the correlated random effects + the residual correlations
+
+```{r trace3, out.width="90%", out.height="70%"}
+bayesplot::mcmc_trace(params, regex_pars = "cor", np = nuts_params(fit1))
+```
+
+### Assess homogeneity of residuals
+
+
+
+### Assess model fit
+
+We can then investigate how well the models predicted the data using [posterior predictive checks](https://mc-stan.org/bayesplot/reference/PPC-overview.html). Producing the plots may take some time depending on the complexity of your model and the size of your data. You can specify the number of draws to display using the `ndraws` argument within the `pp_check()` function.
+
+```{r ppchek1-mod1, cache = TRUE}
 
 # Model 1
 pp1a <- pp_check(fit1, resp = "Zpredspeed") +
@@ -456,7 +499,9 @@ pp1b <- pp_check(fit1, resp = "Zspacecoveredrate") +
   ggtitle("Rate of space covered")
 pp1c <- pp_check(fit1, resp = "Zlatency1stcapture") +
   ggtitle("Latency 1st capture")
+```
 
+```{r ppchek1-mod2, cache = TRUE}
 # Model 2
 pp2a <- pp_check(fit2, resp = "Zpredspeed") +
   ggtitle("Speed")
@@ -464,17 +509,22 @@ pp2b <- pp_check(fit2, resp = "Zspacecoveredrate") +
   ggtitle("Rate of space covered")
 pp2c <- pp_check(fit2, resp = "Zlatency1stcapture") +
   ggtitle("Latency 1st capture")
+```
 
+We now assemble the posterior predictive checks plots into one figure for model 1
+```{r ppcheck1-fig1, out.width="70%", out.height="70%"}
 
-
-# Combine into one figure --------------------------------------------------------
-
-# Combine into a figure
 fig1 <- ggarrange(
   pp1a, pp1b, pp1c,
   ncol = 2, nrow = 2,
   common.legend = TRUE
 )
+
+fig1
+```
+
+Posterior predictive checks plots into one figure for model 2
+```{r ppcheck1-fig2, out.width="70%", out.height="70%"}
 
 fig2 <- ggarrange(
   pp2a, pp2b, pp2c,
@@ -482,24 +532,7 @@ fig2 <- ggarrange(
   common.legend = TRUE
 )
 
-# Save the figures
-saveRDS(fig1, file = file.path(getwd(), "plots", "fig1.rds"))
-saveRDS(fig2, file = file.path(getwd(), "plots", "fig2.rds"))
-
-```
-
-Posterior predictive plots for model 1
-```{r out.width="100%", out.height="70%"}
-fig1 <- readRDS(file.path(getwd(), "plots", "fig1.rds"))
-fig1
-
-```
-
-Posterior predictive plots for model 2
-```{r out.width="100%", out.height="70%"}
-fig2 <- readRDS(file.path(getwd(), "plots", "fig2.rds"))
 fig2
-
 ```
 
 
@@ -519,9 +552,152 @@ We then inspect how well the model captured the mean
 
 # Interpret the models' results
 
-## Fixed effects - population-level parameters
+## Fixed effects: population-level parameters
 
-## Random effects - group-level parameters
+First, we may be interested in evaluating the fixed effects of our models. To ensure that the parameters are reliable, we will display their respective R-hat and effective sample sizes. We use a treshold of <1.01 for the R-hat values, and a threshold of <100 effective sample sizes as a decision rule for whether the model converged [@Burkner2017;@Vehtari.etal2021a].
+
+```{r}
+
+# Prepare a data.table for model1
+checks1_1 <- data.table(
+  Model = "model1",
+  round(summary(fit1)$fixed[, c(5:7)], digits = 3),
+  keep.rownames = TRUE
+)
+setnames(checks1_1, old = "rn", new = "Parameter")
+
+# Prepare a data.table for model1
+checks1_2 <- data.table(
+  Model = "model2",
+  round(summary(fit2)$fixed[, c(5:7)], digits = 3),
+  keep.rownames = TRUE
+)
+setnames(checks1_2, old = "rn", new = "Parameter")
+
+# Combine as one table
+checks1 <- rbind(checks1_1, checks1_2)
+checks1
+```
+
+We see that the values are within our thresholds. We can thus assume that the models converged, and proceed to evaluate and interpret the parameter values. We use the `summary()` function to display them along with their credible intervals.
+
+```{r}
+
+# Select the fixed effects values with their 95% CIs in a data.table for model1
+fixed1_1 <- data.table(
+  Model = "model1",
+  round(summary(fit1)$fixed[, c(1, 3, 4)], digits = 3),
+  keep.rownames = TRUE
+)
+setnames(fixed1_1, old = "rn", new = "Parameter")
+
+# Select the fixed effects values with their 95% CIs in a data.table for model2
+fixed1_2 <- data.table(
+  Model = "model2",
+  round(summary(fit2)$fixed[, c(1, 3, 4)], digits = 3),
+  keep.rownames = TRUE
+)
+setnames(fixed1_2, old = "rn", new = "Parameter")
+
+# Combine the results from both models as one table
+fixed1 <- rbind(fixed1_1, fixed1_2)
+fixed1
+```
+
+## Random effects: group-level parameters
+
+### Avatar ID: Differences in behaviour among the predator avatars
+
+We now inspect the random effects for the `avatar_id`. As we did with the fixed effects, we start by confirming whether the model converged by verifying the R-hats and effective sample sizes.
+
+```{r}
+
+checks2_1 <- data.table(
+  Model = "model1",
+  round(summary(fit1)$random$avatar_id[, c(5:7)], digits = 3),
+  keep.rownames = TRUE
+)
+setnames(checks2_1, old = "rn", new = "Parameter")
+
+checks2_2 <- data.table(
+  Model = "model2",
+  round(summary(fit2)$random$avatar_id[, c(5:7)], digits = 3),
+  keep.rownames = TRUE
+)
+setnames(checks2_2, old = "rn", new = "Parameter")
+
+checks2 <- rbind(checks2_1, checks2_2)
+checks2
+```
+
+All the values seem to fall below the tresholds. We can now inspect the parameter values. In `brms`, the random effects are displayed as standard deviations (`sd`). Thus, the random effects in our models are standard deviations estimated for each predator trait. The value of the standard deviations indicates whether predator avatars differ in their predicted average behaviours. For example, the value of `0.305` for the predator's speed indicates that there are differences among avatars in their average speed. Thus, some avatars are slower while others are faster.
+
+The correlations (`cor`) between the predator avatars' average behaviours indicates whether, for example, avatars that were faster also captured their first prey faster (e.g. `cor(Zpredspeed_Intercept,Zlatency1stcapture_Intercept)`).
+
+```{r}
+
+# Select the random effects with the estimated value along with their 95% CIs.
+ranefs1_1 <- data.table(
+  Model = "model1",
+  round(summary(fit1)$random$avatar_id[, c(1, 3, 4)], digits = 3),
+  keep.rownames = TRUE
+)
+setnames(ranefs1_1, old = "rn", new = "Parameter")
+
+ranefs1_2 <- data.table(
+  Model = "model2",
+  round(summary(fit2)$random$avatar_id[, c(1, 3, 4)], digits = 3),
+  keep.rownames = TRUE
+)
+setnames(ranefs1_2, old = "rn", new = "Parameter")
+
+ranefs1 <- rbind(ranefs1_1, ranefs1_2)
+ranefs1
+```
+
+### Predator ID : Differences in behaviour among the individual predator players
+
+```{r}
+
+checks3_1 <- data.table(
+  Model = "model1",
+  round(summary(fit1)$random$avatar_id[, c(5:7)], digits = 3),
+  keep.rownames = TRUE
+)
+setnames(checks3_1, old = "rn", new = "Parameter")
+
+checks3_2 <- data.table(
+  Model = "model2",
+  round(summary(fit2)$random$avatar_id[, c(5:7)], digits = 3),
+  keep.rownames = TRUE
+)
+setnames(checks3_2, old = "rn", new = "Parameter")
+
+checks3 <- rbind(checks3_1, checks3_2)
+checks3
+```
+
+```{r}
+
+# Select the random effects with the estimated value along with their 95% CIs.
+ranefs2_1 <- data.table(
+  Model = "model1",
+  round(summary(fit1)$random$predator_id[, c(1, 3, 4)], digits = 3),
+  keep.rownames = TRUE
+)
+setnames(ranefs2_1, old = "rn", new = "Parameter")
+
+ranefs2_2 <- data.table(
+  Model = "model2",
+  round(summary(fit2)$random$predator_id[, c(1, 3, 4)], digits = 3),
+  keep.rownames = TRUE
+)
+setnames(ranefs2_2, old = "rn", new = "Parameter")
+
+ranefs2 <- rbind(ranefs2_1, ranefs2_2)
+ranefs2
+
+```
 
 <br>
 
