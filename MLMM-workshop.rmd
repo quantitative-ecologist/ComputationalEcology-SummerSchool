@@ -20,7 +20,7 @@ output:
     theme: flatly
     df_print: paged
     code_folding: show
-bibliography: references.bib
+bibliography: references1.bib
 nocite: |
   @McElreath2020
   @Burkner2017
@@ -44,7 +44,7 @@ knitr::opts_chunk$set(
 
 # Overview
 
-This workshop is part of the [Sentinelle Nord advanced field school in computational ecology](http://dev.sentinellenord.ulaval.ca/en/ecology2023) held in may 2023 in Val-Morin, Québec, Canada.
+This workshop is part of the [Sentinelle Nord advanced field school in computational ecology](http://dev.sentinellenord.ulaval.ca/en/ecology2023) held in May 2023 in Val-Morin, Québec, Canada.
 
 <br>
 
