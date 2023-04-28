@@ -5,8 +5,8 @@ author:
   - name: Maxime Fraser Franco
     affiliation: Département des Sciences Biologiques & Centre de la Science de la Biodiversité du Québec, Université du Québec à Montréal
     email: fraser_franco.maxime@courrier.uqam.ca
-  - name: Daniel-Fortin
-    affiliation: Département de Biologie & Centre d'étude de la forêt, Université Laval
+  - name: Daniel Fortin
+    affiliation: Département de Biologie & Centre d'Étude de la Forêt, Université Laval
     email: Daniel.Fortin@bio.ulaval.ca
 date: "`r format(Sys.time(), '%d %B, %Y')`"
 output:
