@@ -44,7 +44,17 @@ knitr::opts_chunk$set(
 
 # Overview
 
-This workshop is part of the [Sentinelle Nord advanced field school in computational ecology](http://dev.sentinellenord.ulaval.ca/en/ecology2023) held in May 2023 in Val-Morin, Québec, Canada.
+This tutorial is part of the behavioural ecology work package presented during the [Sentinelle Nord advanced field school in computational ecology](http://dev.sentinellenord.ulaval.ca/en/ecology2023) held in May 2023 in Val-Morin, Québec, Canada.
+
+In this tutorial, we will analyze behavioural data from the online videogame [Dead by Daylight](https://deadbydaylight.com/). This game simulates a predator-prey interaction where one predator player hunts four prey players in a virtual environment. It thus represents a similar system to the TrophIE game that was developed during the summer school where humans interact in a simulated predator-prey game.
+
+The analyses that we will conduct are derived from this study :
+
+- Fraser Franco, M., Santostefano, F., Kelly, C. D., Montiglio, P.-O. (2022) Studying predator foraging mode and hunting success at the individual level with an online videogame. Behavioral Ecology, 33(5), 967-978. [https://doi.org/10.1093/beheco/arac063](https://doi.org/10.1093/beheco/arac063)
+
+- Fraser Franco, M., Santostefano, F., Kelly, C. D., Montiglio, P.-O. (2022). Data from: studying predator foraging mode and hunting success at the individual level with an online videogame. Behaviral Ecology. [https://doi.org/10.17605/OSF.IO/WYVRT](https://doi.org/10.17605/OSF.IO/WYVRT)
+
+The code and data to reproduce the analyses presented in the aforementioned paper are freely available on [GitHub](https://github.com/quantitative-ecologist/predator-foraging-mode-videogames)
 
 <br>
 
@@ -52,9 +62,9 @@ This workshop is part of the [Sentinelle Nord advanced field school in computati
 
 # Case study
 
-Explain my study briefly.
+In the study by Fraser Franco et al. (2022), the authors were interested in mapping the predator's foraging tactics at different levels of biological organisation (among environments, invididuals, and within individuals). They were also investigating which foraging tactics were most successful, and if their success depended on the behaviour of the prey being hunted.
 
-The code to reproduce all the analyse presented in the article is available on [GitHub](https://github.com/quantitative-ecologist/predator-foraging-mode-videogames).
+To do so, they employed multivariate linear mixed models, an extension of standard mixed models where multiple response variables can be modelled simultaneously, and where relationships among the random effects of those response variables can be estimated using variance-covariance matrices.
 
 Here, we will work with a simpler version of the models presented in the paper. All the results presented in the present workshop can be reproduced using the files provided in this [GitHub repository](https://github.com/quantitative-ecologist/ComputationEcology-SummerSchool)
 
