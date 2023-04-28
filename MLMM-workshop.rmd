@@ -120,6 +120,9 @@ setnames(data, "player_id", "predator_id")
 ## Data exploration
 
 ### Data structure
+
+%PO : ici je prendrais le temps de décrire un peu les variables et ce qu'elles représentent. 
+
 ```{r}
 # Print the data
 data
@@ -202,6 +205,8 @@ data[, ":=" (
 standardize <- function (x) {
   (x - mean(x, na.rm = TRUE)) / sd(x, na.rm = TRUE)
 }
+%% PO : pourquoi ne pas utiliser la fonction scale? 
+### data3 <- apply(data[,4:9], 2, scale)
 
 data[
   , c("Zgame_duration",
@@ -225,7 +230,9 @@ The following block of code shows the formula for the three traits we are modell
 - The predator's rate of space covered
 - The predator's latency before the first prey is captured
 
-We use the `bf()` in `brms` to write the model formulas. For the predator's speed and rate of space covered, the model estimates a general intercept and two random effects which are the `avatar_id` and the `predator_id`. The model for the predator's latency before the first capture follows the same structure, but we include the match duration (`Zgame_duration`) as a fixed effect to control for differences in game lenght. The three sub models are modeled assuming a Gaussian distribution family of the residuals.
+We use the `bf()` in `brms` to write the model formulas %%%PO (for "**b**rms **f**ormula").
+For the predator's speed and rate of space covered, the model estimates a general intercept and two random effects which are the `avatar_id` and the `predator_id`. The model for the predator's latency before the first capture follows the same structure, but we include the match duration (`Zgame_duration`) as a fixed effect to control for differences in game length.
+The three sub models are modeled assuming a Gaussian distribution family of the residuals.
 
 ```{r}
 
@@ -365,6 +372,8 @@ fit2 <- readRDS(file.path(path, "mv_model2.rds"))
 **Code for Model 1 where we do not account for prey behaviour :**
 
 Here is the `brms` code that was used to run the first model (`fit1`) that we just imported. We used the `brm()` function to parameterize and initiate the sampling.
+%%%PO even if we do not want them to run the models, I would spend a little bit more time here going over the arguments? 
+%%% I would still avoid falling into the rabbit hole of everything one needs to know to fit a bayesian model, but just cite the relevant work for someone who would like to run models properly. 
 
 ```{r eval = FALSE}
 
@@ -446,6 +455,10 @@ my_path <- file.path(getwd(), "your_folder")
 saveRDS(fit2, file = file.path(my_path, "mv_model2.rds"))
 ```
 
+
+%%%PO Perhaps a few sentences here explaining what the model fitting does? 
+%%%Just to introduce quickle the chains? 
+%%% and set the table for the next section on diagnostics, where we play with these components. 
 
 ## Model diagnostics
 
