@@ -50,9 +50,9 @@ In this tutorial, we will analyze behavioural data from the online videogame [De
 
 The analyses that we will conduct are derived from this study :
 
-- Fraser Franco, M., Santostefano, F., Kelly, C. D., Montiglio, P.-O. (2022) Studying predator foraging mode and hunting success at the individual level with an online videogame. Behavioral Ecology, 33(5), 967-978. [https://doi.org/10.1093/beheco/arac063](https://doi.org/10.1093/beheco/arac063)
+- Fraser Franco, M., Santostefano, F., Kelly, C. D., Montiglio, P.-O. (2022) Studying predator foraging mode and hunting success at the individual level with an online videogame. *Behavioral Ecology*, *33*(5), 967-978. [https://doi.org/10.1093/beheco/arac063](https://doi.org/10.1093/beheco/arac063)
 
-- Fraser Franco, M., Santostefano, F., Kelly, C. D., Montiglio, P.-O. (2022). Data from: studying predator foraging mode and hunting success at the individual level with an online videogame. Behaviral Ecology. [https://doi.org/10.17605/OSF.IO/WYVRT](https://doi.org/10.17605/OSF.IO/WYVRT)
+- Fraser Franco, M., Santostefano, F., Kelly, C. D., Montiglio, P.-O. (2022). Data from: studying predator foraging mode and hunting success at the individual level with an online videogame. *Behavioral Ecology*. [https://doi.org/10.17605/OSF.IO/WYVRT](https://doi.org/10.17605/OSF.IO/WYVRT)
 
 The code and data to reproduce the analyses presented in the aforementioned paper are freely available on [GitHub](https://github.com/quantitative-ecologist/predator-foraging-mode-videogames)
 
@@ -62,9 +62,9 @@ The code and data to reproduce the analyses presented in the aforementioned pape
 
 # Case study
 
-In the study by Fraser Franco et al. (2022), the authors were interested in mapping the predator's foraging tactics at different levels of biological organisation (among environments, invididuals, and within individuals). They were also investigating which foraging tactics were most successful, and if their success depended on the behaviour of the prey being hunted.
+In the study by Fraser Franco et al. (2022), the authors were interested in mapping the predator's foraging tactics at different levels of biological organization (among environments, individuals, and within individuals). They were also investigating which foraging tactics were most successful, and if their success depended on the behaviour of the prey being hunted.
 
-To do so, they employed multivariate linear mixed models, an extension of standard mixed models where multiple response variables can be modelled simultaneously, and where relationships among the random effects of those response variables can be estimated using variance-covariance matrices.
+To do so, they employed multivariate linear mixed models, an extension of standard mixed models where multiple response variables can be modeled simultaneously, and where relationships among the random effects of those response variables are estimated.
 
 Here, we will work with a simpler version of the models presented in the paper. All the results presented in the present workshop can be reproduced using the files provided in this [GitHub repository](https://github.com/quantitative-ecologist/ComputationEcology-SummerSchool)
 
@@ -74,7 +74,14 @@ Here, we will work with a simpler version of the models presented in the paper. 
 
 # The data
 
-Explain the dataset
+The player behaviour data was collected by the videogame company Behaviour Interactive between March 20 2019 and June 17 2019. Every player initiated their first match between March 20 and March 22. This dataset summarizes behavioural data from matches played as the predator. For every match, the date (date-hour-minutes), the duration (seconds), the predator player's anonymous ID, the predator's avatar, and the game environment were recorded along with the predator and prey behaviours.
+
+Here is some basic information on the dataset :
+- Matches were played exclusively against a group of unknown people.
+- Minimum match duration was 5 minutes
+- Population of 2 378 players
+- 77 047 matches (average: 34 matches per individual, range: 1-1059 matches)
+- The average match duration was 11.13 minutes (range: 5-35 min).
 
 
 ## Load the libraries
@@ -97,7 +104,7 @@ library(ggpubr)
 
 ## Import the data
 
-The data is hosted on a public repository on GitHub. We will export it from there.
+We directly import the data hosted on the public GitHub repository into our session.
 
 ```{r}
 
@@ -131,7 +138,7 @@ setnames(data, "player_id", "predator_id")
 
 ### Data structure
 
-%PO : ici je prendrais le temps de décrire un peu les variables et ce qu'elles représentent. 
+PO : ici je prendrais le temps de décrire un peu les variables et ce qu'elles représentent. 
 
 ```{r}
 # Print the data
@@ -210,13 +217,10 @@ data[, ":=" (
   )
 ]
 
-
 # Standardize the variables
-standardize <- function (x) {
+standardize <- function(x) {
   (x - mean(x, na.rm = TRUE)) / sd(x, na.rm = TRUE)
 }
-%% PO : pourquoi ne pas utiliser la fonction scale? 
-### data3 <- apply(data[,4:9], 2, scale)
 
 data[
   , c("Zgame_duration",
@@ -240,7 +244,7 @@ The following block of code shows the formula for the three traits we are modell
 - The predator's rate of space covered
 - The predator's latency before the first prey is captured
 
-We use the `bf()` in `brms` to write the model formulas %%%PO (for "**b**rms **f**ormula").
+We use the `bf()` (for "**b**rms **f**ormula") in `brms` to write the model formulas.
 For the predator's speed and rate of space covered, the model estimates a general intercept and two random effects which are the `avatar_id` and the `predator_id`. The model for the predator's latency before the first capture follows the same structure, but we include the match duration (`Zgame_duration`) as a fixed effect to control for differences in game length.
 The three sub models are modeled assuming a Gaussian distribution family of the residuals.
 
@@ -312,7 +316,7 @@ hook_form2 <- bf(
 
 ### Setting up priors
 
-Lastly, the Bayesian approach requires that we define priors for the parameters that the models will estimate. (brief explanation here).You can read more on priors in the following sources :
+Lastly, the Bayesian approach requires that we define priors for the parameters that the models will estimate. (brief explanation here). You can read more on priors in the following sources :
 
 - source1
 - source2
@@ -382,8 +386,8 @@ fit2 <- readRDS(file.path(path, "mv_model2.rds"))
 **Code for Model 1 where we do not account for prey behaviour :**
 
 Here is the `brms` code that was used to run the first model (`fit1`) that we just imported. We used the `brm()` function to parameterize and initiate the sampling.
-%%%PO even if we do not want them to run the models, I would spend a little bit more time here going over the arguments? 
-%%% I would still avoid falling into the rabbit hole of everything one needs to know to fit a bayesian model, but just cite the relevant work for someone who would like to run models properly. 
+
+PO even if we do not want them to run the models, I would spend a little bit more time here going over the arguments? I would still avoid falling into the rabbit hole of everything one needs to know to fit a bayesian model, but just cite the relevant work for someone who would like to run models properly. 
 
 ```{r eval = FALSE}
 
@@ -466,9 +470,8 @@ saveRDS(fit2, file = file.path(my_path, "mv_model2.rds"))
 ```
 
 
-%%%PO Perhaps a few sentences here explaining what the model fitting does? 
-%%%Just to introduce quickle the chains? 
-%%% and set the table for the next section on diagnostics, where we play with these components. 
+PO Perhaps a few sentences here explaining what the model fitting does? 
+Just to introduce quickle the chains? and set the table for the next section on diagnostics, where we play with these components. 
 
 ## Model diagnostics
 
@@ -507,7 +510,120 @@ bayesplot::mcmc_trace(params, regex_pars = "cor", np = nuts_params(fit1))
 
 ### Assess homogeneity of residuals
 
+Here, we inspect our linear model assumptions by :
+ - confirming that the residuals follow a gaussian distribution
+ - confirming that the variance of the residuals is homogeneous
 
+We start by extracting the fitted values and residuals of the first model
+
+```{r resid-mod1, cache = TRUE}
+
+# Residuals for model 1
+fitted1a <- fitted(fit1, resp = "Zpredspeed")[, 1]
+resid1a <- residuals(fit1, resp = "Zpredspeed")[, 1]
+
+fitted1b <- fitted(fit1, resp = "Zspacecoveredrate")[, 1]
+resid1b <- residuals(fit1, resp = "Zspacecoveredrate")[, 1]
+
+fitted1c <- fitted(fit1, resp = "Zlatency1stcapture")[, 1]
+resid1c <- residuals(fit1, resp = "Zlatency1stcapture")[, 1]
+```
+
+We do the same for the second model
+
+```{r resid-mod2, cache = TRUE}
+# Residuals for model 2
+fitted2a <- fitted(fit2, resp = "Zpredspeed")[, 1]
+resid2a <- residuals(fit2, resp = "Zpredspeed")[, 1]
+
+fitted2b <- fitted(fit2, resp = "Zspacecoveredrate")[, 1]
+resid2b <- residuals(fit2, resp = "Zspacecoveredrate")[, 1]
+
+fitted2c <- fitted(fit2, resp = "Zlatency1stcapture")[, 1]
+resid2c <- residuals(fit2, resp = "Zlatency1stcapture")[, 1]
+
+```
+
+We then produce the plots and combine them together to inspect their distribution. We start with the 1st model.
+
+```{r residplot-mod1, out.height="70%"}
+
+assum1a <- ggplot() +
+  geom_point(aes(x = fitted1a, y = resid1a), shape = 20, alpha = 0.05) +
+  scale_y_continuous(breaks = seq(-6, 6, 2), limits = c(-7.55, 6)) +
+  ggtitle("Speed - model 1") +
+  xlab("Fitted values") + ylab("Residuals") +
+  theme_bw() +
+  theme(title = element_text(size = 8), panel.grid = element_blank())
+assum1a <- ggExtra::ggMarginal(assum1a, type = "histogram", margins = "y")
+
+assum1b <- ggplot() +
+  geom_point(aes(x = fitted1b, y = resid1b), shape = 20, alpha = 0.05) +
+  scale_y_continuous(breaks = seq(-6, 6, 2), limits = c(-7.55, 6)) +
+  ggtitle("Space covered - model 1") +
+  xlab("Fitted values") + ylab("Residuals") +
+  theme_bw() +
+  theme(title = element_text(size = 8), panel.grid = element_blank())
+assum1b <- ggExtra::ggMarginal(assum1b, type = "histogram", margins = "y")
+
+assum1c <- ggplot() +
+  geom_point(aes(x = fitted1c, y = resid1c), shape = 20, alpha = 0.05) +
+  scale_y_continuous(breaks = seq(-6, 6, 2), limits = c(-7.55, 6)) +
+  ggtitle("Latency 1st capture - model 1") +
+  xlab("Fitted values") + ylab("Residuals") +
+  theme_bw() +
+  theme(title = element_text(size = 8), panel.grid = element_blank())
+assum1c <- ggExtra::ggMarginal(assum1c, type = "histogram", margins = "y")
+
+# Combine all plots into a single figure
+resids1 <- ggarrange(
+  assum1a, assum1b, assum1c,
+  ncol = 3, nrow = 1
+)
+
+resids1
+```
+
+We do the same with the second model.
+
+```{r residplot-mod2, fig.height="50%"}
+assum2a <- ggplot() +
+  geom_point(aes(x = fitted2a, y = resid2a), shape = 20, alpha = 0.05) +
+  scale_y_continuous(breaks = seq(-8, 6, 2), limits = c(-8, 6)) +
+  ggtitle("Speed - model 2") +
+  xlab("Fitted values") + ylab("Residuals") +
+  theme_bw() +
+  theme(title = element_text(size = 8), panel.grid = element_blank())
+assum2a <- ggExtra::ggMarginal(assum2a, type = "histogram", margins = "y")
+
+assum2b <- ggplot() +
+  geom_point(aes(x = fitted2b, y = resid2b), shape = 20, alpha = 0.05) +
+  scale_y_continuous(breaks = seq(-8, 6, 2), limits = c(-8, 6)) +
+  ggtitle("Space covered - model 2") +
+  xlab("Fitted values") + ylab("Residuals") +
+  theme_bw() +
+  theme(title = element_text(size = 8), panel.grid = element_blank())
+assum2b <- ggExtra::ggMarginal(assum2b, type = "histogram", margins = "y")
+
+assum2c <- ggplot() +
+  geom_point(aes(x = fitted2c, y = resid2c), shape = 20, alpha = 0.05) +
+  scale_y_continuous(breaks = seq(-8, 6, 2), limits = c(-8, 6)) +
+  ggtitle("Latency 1st capture - model 2") +
+  xlab("Fitted values") + ylab("Residuals") +
+  theme_bw() +
+  theme(title = element_text(size = 8), panel.grid = element_blank())
+assum2c <- ggExtra::ggMarginal(assum2c, type = "histogram", margins = "y")
+
+# Combine all plots into a single figure
+resids2 <- ggarrange(
+  assum2a, assum2b, assum2c,
+  ncol = 3, nrow = 1, heights = c(0.5, 0.5, 0.5)
+)
+
+resids2
+```
+
+Short summary of checks.
 
 ### Assess model fit
 
@@ -535,6 +651,7 @@ pp2c <- pp_check(fit2, resp = "Zlatency1stcapture") +
 ```
 
 We now assemble the posterior predictive checks plots into one figure for model 1
+
 ```{r ppcheck1-fig1, out.width="70%", out.height="70%"}
 
 fig1 <- ggarrange(
@@ -547,6 +664,7 @@ fig1
 ```
 
 Posterior predictive checks plots into one figure for model 2
+
 ```{r ppcheck1-fig2, out.width="70%", out.height="70%"}
 
 fig2 <- ggarrange(
@@ -563,7 +681,9 @@ We then inspect how well the model captured the mean
 
 
 
-### Inspect overlap between prior and posterior distributions
+### Additional checks
+
+- Inspect overlap between prior and posterior distributions
 
 ```{r eval = FALSE}
 
