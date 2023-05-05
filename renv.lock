@@ -762,6 +762,27 @@
       ],
       "Hash": "15e9634c0fcd294799e9b2e929ed1b86"
     },
+    "ggExtra": {
+      "Package": "ggExtra",
+      "Version": "0.10.0",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "R",
+        "R6",
+        "colourpicker",
+        "ggplot2",
+        "grDevices",
+        "grid",
+        "gtable",
+        "miniUI",
+        "scales",
+        "shiny",
+        "shinyjs",
+        "utils"
+      ],
+      "Hash": "f505d7f3058403787145fe0f7b1ff84c"
+    },
     "ggplot2": {
       "Package": "ggplot2",
       "Version": "3.4.2",
