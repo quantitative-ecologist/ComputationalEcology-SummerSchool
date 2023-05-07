@@ -19,7 +19,7 @@ output:
     theme: flatly
     df_print: paged
     code_folding: show
-#bibliography: references2.bib
+bibliography: references.bib
 ---
 
 
@@ -45,9 +45,12 @@ This workshop is part of the [Sentinelle Nord advanced field school in computati
 
 
 
-# Case study
+# Multi-level foraging decisions of prey under predation risk in a landscape with refuges: How to become the richest possible!
 
-Explain case study...
+Optimal diet and optimal residency time can be combined in a hierarchical model of optimal foraging in patchy landscapes [@mcnamaraCombiningPreyChoice1993]. Prey then have to decide which prey type(s) should be consumed in each patch, and when they should leave the current patch. In risky environments, their decisions should also consider their risk of mortality when involved in different behaviour. Optimal decisions thus depend on multiple factors, including the risk of predation, the level of safety provided by refuges, the time required to handle each resource, and the gain of handling a given resource.
+
+What are the optimal multi-level foraging decisions under these conditions? We estimate this optimality problem numerically through a two-step process. First, we estimate the gain that can be expected within patches from the different possible foraging decisions. Each set of foraging decisions within the patches yields the total gain (g) during the residence time (t). Second, we use this information [g(t), t] as input to the inter-patch model to estimate the overall realized gain that can be expected during Tf = 30 min, given the global mortality risk. Although a PowerPoint presentation details the modeling approach, below we summarize the general method through an example. 
+
 
 <br>
 
@@ -55,11 +58,13 @@ Explain case study...
 
 # The within-patch model
 
-Explain the within patch model...
+Let's imagine that you have 30 min to collect “priceless” marbles without getting killed by predators looking for you. Hoards of marbles can be found in bags randomly placed in the environment. You cannot move or look inside the bags, which forces you to draw one marble at a time and decide if you want to keep it, a process taking lambda_in minutes. The bag contains 100 marbles of three types, one with no value and two with profitability e1/h1 and e2/h2. If you do not keep a marble, you have to put it back in the bag, whereas if you keep it, you need to spend h1 or h2 minutes handling it. Of course, the number of marbles of the type(s) you keep will decrease in the bag as you collect them, which is not the case for other types. The probability of drawing a marble of the type(s) you want therefore decreases over time. You must decide when you should give up looking in this bag and start search for another bag.
 
 ## Model parameters
 
-courte explication ici...
+A critical step is to determine the gain function, which depends on the drawing rate of marbles, the number of marbles of the different types, and whether or not a given type is collected, as well as its handling time and value. 
+
+We  now estimate the first step of the gain function g(0), starting from the animal's arrival in the patch. We consider a typical type II functional response [@fryxellIndividualBehaviorCommunity1997], where the encounter rate with each type of marble is the product of the "number of marbles that can be drawn per minute (lambda_in)" and the "proportion of that type of marble available in the bag" upon arrival in the patch (i.e., N1_in_t0 / N_in_t0). 
 
 ```{r}
 Tf <- 30              # game duration
@@ -79,9 +84,11 @@ p1_in <- 1  # if marble of type 1 are taken, p = 1; 0 otherwise
 p2_in <- 1  # if marble of type 2 are taken, p = 1; 0 otherwise
 ```
 
+The expected number of marbles of a given type available at the end of the step (cons1_in_T0) is directly related to the functional response (N.B. e1_in or e2_in have been removed) for each type of marble.
+
 ## Building the model
 
-courte explication ici...
+Here, we define the starting values and create empty vectors that will be filled. 
 
 ```{r}
 E_in_t0 <- ((a_in * (N1_in_t0 / N_in_t0) * e1_in * p1_in) +
@@ -100,7 +107,7 @@ cons2_in_T0 <- (a_in * (N2_in_t0 / N_in_t0) * p2_in) /
                (a_in * (N2_in_t0 / N_in_t0) * h2_in * p2_in))
 ```
 
-courte explication ici...
+We  estimate the expected temporal changes in the number of marbles available at the end of each time step for each marble type, and use this information to calculate the gain function (E_in_t).
 
 ```{r}
 E_in_t <- E_in_t0
@@ -167,7 +174,7 @@ for (i in 1:(Tf)) {
 
 ## Visualize the predictions
 
-courte description?...
+We can see that, under these rules, the rate of gain slows down over time. 
 
 ```{r}
 
@@ -197,14 +204,11 @@ ggplot(data = dat, aes(x = x, y = y)) +
 
 # The among-patch model
 
-Explain the among-patch model...
+Now that we have determined the expect gain in a patch, given the choice of marble type and the time spent in each patch, we can use this information to estimate the expected overall gain after the allowed 30 minutes.
 
 ## Model parameters
 
-courte explication ici...
-
-200 patches; 30 participants, ~12 ha; 120 000 m2, mean inter-patch distance = 12.25 m (= 1 / (2 * ((200 / 120000)^0.5))) = 315 x 315 m)
-**Patch density :** (patches / m2) if N1 = 1/a, N2 = 0.3/a, then type 1 is better than type 2
+This estimation will depend on the encounter rate with patches when searching. We thus need to take into account the density of marble bags and the area that can be searched per unit of time, which in turn, depends on travel speed and the area that can be scanned while travelling. We must also consider predation risk (through the probability of survival) when involved in different behaviours. 
 
 ```{r}
 a <- 30 * 23        # area search rate (m2 / min) (i.e. width * speed)
@@ -220,7 +224,7 @@ hx <- 1:Tf          # h: min spent in a patch handing marbles
 # encounter (patch/min) * handling a patch (min/patch)
 ```
 
-expliquer ceci...
+We create vector values that will be used in the calculation. 
 
 ```{r}
 Trx <- 1:Tf
@@ -229,7 +233,10 @@ totgain1 <- c(rep(totgain, times = length(Trx)))
 Tr <- c(rep(Trx, each = length(hx)))
 ```
 
-expliquer ceci... serait-ce mieux de séparer un peu le code?
+Because  you specifically have 30 min to collect marbles, we consider the behaviour you will be doing when the time is up. For example, you may not be able to spent the time you wanted in the last patch. The approach below considers this possibility when calculating the overall gain that can be expected in 30 minutes. The model provides estimates of the optimal time spent in refuges, searching for marble patches, and collecting marbles in patches, given your foraging choice and the risk of predation.  
+
+As you will see, the model does not directly identify the optimal diet. To determine the most rewarding choice, all you have to do is estimate the long-term expected payouts if you collect only one type of marble or if you collect both. You will then be able to directly see which strategy offers the highest expected gains. The model provides an estimate the time that should be spent in refuges, at marble patches, and moving between patches, to maximize your gains, given the long-term mortality risk. 
+
 ```{r}
 Alldata1 <- matrix(c(Tr, hpatcha, totgain1), nrow = (length(Tr)), ncol = 3)
 colnames(Alldata1) <- c("Tr", "hpatch", "e_intra")
@@ -312,6 +319,8 @@ cc1
 
 
 ## Visualize the predictions
+
+The code generates a figure showing the gain rate ($ / time spent in patch) that can be expected in a patch, as a function of the time spent in that patch. The code also generates two columns providing eight attributes of the simulation, including the behaviours yielding the highest payoffs, given the diet choice. 
 
 ```{r}
 
