@@ -2,12 +2,16 @@
 title: Sentinelle Nord Advanced Field School in Computational Ecology
 subtitle: Predicting optimal foraging behaviour in TrophIE using a nested patch model
 author:
-  - name: Maxime Fraser Franco
-    affiliation: Département des Sciences Biologiques & Centre de la Science de la Biodiversité du Québec, Université du Québec à Montréal
-    email: fraser_franco.maxime@courrier.uqam.ca
-  - name: Daniel Fortin
+  - name: | 
+        Daniel Fortin : \
+        *developed the code for the models*
     affiliation: Département de Biologie & Centre d'Étude de la Forêt, Université Laval
     email: Daniel.Fortin@bio.ulaval.ca
+  - name: |
+        Maxime Fraser Franco : \
+        *developed the R markdown document*
+    affiliation: Département des Sciences Biologiques & Centre de la Science de la Biodiversité du Québec, Université du Québec à Montréal
+    email: fraser_franco.maxime@courrier.uqam.ca
 date: "`r format(Sys.time(), '%d %B, %Y')`"
 output:
   html_document:
@@ -39,13 +43,17 @@ knitr::opts_chunk$set(
 
 # Overview
 
-This workshop is part of the [Sentinelle Nord advanced field school in computational ecology](http://dev.sentinellenord.ulaval.ca/en/ecology2023) held in May 2023 in Val-Morin, Québec, Canada.
+This tutorial is part of the behavioural ecology work package presented during the [Sentinelle Nord advanced field school in computational ecology](http://dev.sentinellenord.ulaval.ca/en/ecology2023) held in May 2023 in Val-Morin, Québec, Canada.
+
+*In this tutorial, we will... (donner un mini aperçu de ce qui sera couvert.) On pourrait dire par exemple qu'on va utiliser l'optimal foraging theory pour prédire le comportement optimal durant TrophIE?*
 
 <br>
 
 
 
-# Multi-level foraging decisions of prey under predation risk in a landscape with refuges: How to become the richest possible!
+# Case study
+
+#### Multi-level foraging decisions of prey under predation risk in a landscape with refuges: How to become the richest possible? {.unnumbered}
 
 Optimal diet and optimal residency time can be combined in a hierarchical model of optimal foraging in patchy landscapes [@mcnamaraCombiningPreyChoice1993]. Prey then have to decide which prey type(s) should be consumed in each patch, and when they should leave the current patch. In risky environments, their decisions should also consider their risk of mortality when involved in different behaviour. Optimal decisions thus depend on multiple factors, including the risk of predation, the level of safety provided by refuges, the time required to handle each resource, and the gain of handling a given resource.
 
@@ -58,56 +66,56 @@ What are the optimal multi-level foraging decisions under these conditions? We e
 
 # The within-patch model
 
-Let's imagine that you have 30 min to collect “priceless” marbles without getting killed by predators looking for you. Hoards of marbles can be found in bags randomly placed in the environment. You cannot move or look inside the bags, which forces you to draw one marble at a time and decide if you want to keep it, a process taking lambda_in minutes. The bag contains 100 marbles of three types, one with no value and two with profitability e1/h1 and e2/h2. If you do not keep a marble, you have to put it back in the bag, whereas if you keep it, you need to spend h1 or h2 minutes handling it. Of course, the number of marbles of the type(s) you keep will decrease in the bag as you collect them, which is not the case for other types. The probability of drawing a marble of the type(s) you want therefore decreases over time. You must decide when you should give up looking in this bag and start search for another bag.
+Let's imagine that you have 30 minutes to collect "priceless" marbles without getting killed by predators looking for you. Hoards of marbles can be found in bags randomly placed in the environment. You cannot move or look inside the bags, which forces you to draw one marble at a time and decide if you want to keep it, a process taking lambda_in minutes. The bag contains 100 marbles of three types, one with no value and two with profitability e1/h1 and e2/h2. If you do not keep a marble, you have to put it back in the bag, whereas if you keep it, you need to spend h1 or h2 minutes handling it. Of course, the number of marbles of the type(s) you keep will decrease in the bag as you collect them, which is not the case for other types. The probability of drawing a marble of the type(s) you want therefore decreases over time. You must decide when you should give up looking in this bag and start search for another bag.
 
 ## Model parameters
 
 A critical step is to determine the gain function, which depends on the drawing rate of marbles, the number of marbles of the different types, and whether or not a given type is collected, as well as its handling time and value. 
 
-We  now estimate the first step of the gain function g(0), starting from the animal's arrival in the patch. We consider a typical type II functional response [@fryxellIndividualBehaviorCommunity1997], where the encounter rate with each type of marble is the product of the "number of marbles that can be drawn per minute (lambda_in)" and the "proportion of that type of marble available in the bag" upon arrival in the patch (i.e., N1_in_t0 / N_in_t0). 
+We  now estimate the first step of the gain function g(0), starting from the animal's arrival in the patch. We consider a typical type II functional response [@fryxellIndividualBehaviorCommunity1997], where the encounter rate with each type of marble is the product of the "number of marbles that can be drawn per minute (lambda_in)" and the "proportion of that type of marble available in the bag" upon arrival in the patch (i.e., `N1_in_t0 / N_in_t0`). 
 
 ```{r}
-Tf <- 30              # game duration
-N_in_t0 <- 50         # total number of marbles at a given station
-N1_in_t0 <- 10        # marbles of type 1
-N2_in_t0 <- N1_in_t0  # marbles of type2
+Tf <- 30               # game duration
+N_in_t0 <- 50          # total number of marbles at a given station
+N1_in_t0 <- 10         # marbles of type 1
+N2_in_t0 <- N1_in_t0   # marbles of type2
 
 Nsubstrat <- N_in_t0 - (N1_in_t0 + N2_in_t0)
 
-a_in <- (60 / 10)  # searching rate when not handling (marbles that can be drawn / min)
-h1_in <- (15 / 60) # handling time prey type 1 (min / marble)
-h2_in <- (15 / 60) # handling time prey type 1 (min/marble)
+lambda_in <- (60 / 10) # searching rate when not handling (marbles that can be drawn / min)
+h1_in <- (10 / 60)     # handling time prey type 1 (min / marble)
+h2_in <- (10 / 60)     # handling time prey type 1 (min/marble)
 
-e1_in <- 40 # points gained by consuming a prey of type 1 (points/marble)
-e2_in <- 5  # points gained by consuming a prey of type 1 (points/marble)
-p1_in <- 1  # if marble of type 1 are taken, p = 1; 0 otherwise
-p2_in <- 1  # if marble of type 2 are taken, p = 1; 0 otherwise
+e1_in <- 60            # points gained by consuming a prey of type 1 (points/marble)
+e2_in <- 10            # points gained by consuming a prey of type 1 (points/marble)
+p1_in <- 1             # if marble of type 1 are taken, p = 1; 0 otherwise
+p2_in <- 0             # if marble of type 2 are taken, p = 1; 0 otherwise
 ```
 
-The expected number of marbles of a given type available at the end of the step (cons1_in_T0) is directly related to the functional response (N.B. e1_in or e2_in have been removed) for each type of marble.
+The expected number of marbles of a given type available at the end of the step (`cons1_in_T0`) is directly related to the functional response (N.B. `e1_in` or `e2_in` have been removed) for each type of marble.
 
 ## Building the model
 
 Here, we define the starting values and create empty vectors that will be filled. 
 
 ```{r}
-E_in_t0 <- ((a_in * (N1_in_t0 / N_in_t0) * e1_in * p1_in) +
-            (a_in * (N2_in_t0 / N_in_t0) * e2_in * p2_in)) /
-            (1 + (a_in * (N1_in_t0 / N_in_t0) * h1_in * p1_in) +
-            (a_in * (N2_in_t0 / N_in_t0) * h2_in * p2_in))
+E_in_t0 <- ((lambda_in * (N1_in_t0 / N_in_t0) * e1_in * p1_in) +
+            (lambda_in * (N2_in_t0 / N_in_t0) * e2_in * p2_in)) /
+            (1 + (lambda_in * (N1_in_t0 / N_in_t0) * h1_in * p1_in) +
+            (lambda_in * (N2_in_t0 / N_in_t0) * h2_in * p2_in))
 
 
-cons1_in_T0 <- (a_in * (N1_in_t0 / N_in_t0) * p1_in) /
-               (1 + (a_in * (N1_in_t0 / N_in_t0) * h1_in * p1_in) +
-               (a_in * (N2_in_t0 / N_in_t0) * h2_in * p2_in))
+cons1_in_T0 <- (lambda_in * (N1_in_t0 / N_in_t0) * p1_in) /
+               (1 + (lambda_in * (N1_in_t0 / N_in_t0) * h1_in * p1_in) +
+               (lambda_in * (N2_in_t0 / N_in_t0) * h2_in * p2_in))
 
 
-cons2_in_T0 <- (a_in * (N2_in_t0 / N_in_t0) * p2_in) /
-               (1 + (a_in * (N1_in_t0 / N_in_t0) * h1_in * p1_in) +
-               (a_in * (N2_in_t0 / N_in_t0) * h2_in * p2_in))
+cons2_in_T0 <- (lambda_in * (N2_in_t0 / N_in_t0) * p2_in) /
+               (1 + (lambda_in * (N1_in_t0 / N_in_t0) * h1_in * p1_in) +
+               (lambda_in * (N2_in_t0 / N_in_t0) * h2_in * p2_in))
 ```
 
-We  estimate the expected temporal changes in the number of marbles available at the end of each time step for each marble type, and use this information to calculate the gain function (E_in_t).
+We  estimate the expected temporal changes in the number of marbles available at the end of each time step for each marble type, and use this information to calculate the gain function (`E_in_t`).
 
 ```{r}
 E_in_t <- E_in_t0
@@ -134,32 +142,32 @@ Courte explication ici... (je ne suis pas sûr si c'est ce code qui roule le mod
 for (i in 1:(Tf)) {
 
   N1_in_t <- N1_in_t -
-            ((a_in * (N1_in_t / N_in_t) * p1_in) /
-             (1 + (a_in * (N1_in_t / N_in_t) * h1_in * p1_in) +
-             (a_in * (N2_in_t / N_in_t) * h2_in * p2_in))
+            ((lambda_in * (N1_in_t / N_in_t) * p1_in) /
+             (1 + (lambda_in * (N1_in_t / N_in_t) * h1_in * p1_in) +
+             (lambda_in * (N2_in_t / N_in_t) * h2_in * p2_in))
             )
 
   N2_in_t <- N2_in_t -
-             ((a_in * (N2_in_t / N_in_t) * p2_in) /
-              (1 + (a_in * (N1_in_t / N_in_t) * h1_in * p1_in) +
-              (a_in * (N2_in_t / N_in_t) * h2_in * p2_in))
+             ((lambda_in * (N2_in_t / N_in_t) * p2_in) /
+              (1 + (lambda_in * (N1_in_t / N_in_t) * h1_in * p1_in) +
+              (lambda_in * (N2_in_t / N_in_t) * h2_in * p2_in))
              )
 
-  E_in_t <- ((a_in * (N1_in_t / N_in_t) * e1_in * p1_in) +
-             (a_in * (N2_in_t / N_in_t) * e2_in * p2_in)
+  E_in_t <- ((lambda_in * (N1_in_t / N_in_t) * e1_in * p1_in) +
+             (lambda_in * (N2_in_t / N_in_t) * e2_in * p2_in)
             ) /
-            (1 + (a_in * (N1_in_t / N_in_t) * h1_in * p1_in) +
-             (a_in * (N2_in_t / N_in_t) * h2_in * p2_in)
+            (1 + (lambda_in * (N1_in_t / N_in_t) * h1_in * p1_in) +
+             (lambda_in * (N2_in_t / N_in_t) * h2_in * p2_in)
             )
 
   N_in_t <- N1_in_t + N2_in_t + Nsubstrat
 
-  num  <- (a_in * (N1_in_t / N_in_t) * e1_in * p1_in) +
-          (a_in * (N2_in_t / N_in_t) * e2_in * p2_in)
+  num  <- (lambda_in * (N1_in_t / N_in_t) * e1_in * p1_in) +
+          (lambda_in * (N2_in_t / N_in_t) * e2_in * p2_in)
 
   denom <- 1 +
-           (a_in * (N1_in_t / N_in_t) * h1_in * p1_in) +
-           (a_in * (N2_in_t / N_in_t) * h2_in * p2_in)
+           (lambda_in * (N1_in_t / N_in_t) * h1_in * p1_in) +
+           (lambda_in * (N2_in_t / N_in_t) * h2_in * p2_in)
 
   vN1_in_t[i] <- (N1_in_t)
   vN2_in_t[i] <- (N2_in_t)
@@ -194,6 +202,8 @@ ggplot(data = dat, aes(x = x, y = y)) +
     geom_line(linewidth = 1.5, color = "dodgerblue") +
     xlab("\nResidency time (units?)") +
     ylab("Total gain (units?)\n") +
+    scale_x_continuous(breaks = seq(0, 30, 6), limits = c(0, 30)) +
+    scale_y_continuous(breaks = seq(0, 600, 150), limits = c(0, 600)) +
     theme_bw(base_size = 15) +
     theme(panel.grid = element_blank())
 ```
@@ -211,16 +221,16 @@ Now that we have determined the expect gain in a patch, given the choice of marb
 This estimation will depend on the encounter rate with patches when searching. We thus need to take into account the density of marble bags and the area that can be searched per unit of time, which in turn, depends on travel speed and the area that can be scanned while travelling. We must also consider predation risk (through the probability of survival) when involved in different behaviours. 
 
 ```{r}
-a <- 30 * 23        # area search rate (m2 / min) (i.e. width * speed)
-N1 <- 200 / 120000  # density of patch type 1  (patches / m2)
-N2 <- N1            # density of patch type 2  (patches / m2)
-mus <- 0.45         # survival probability when travelling between patches
-muh <- mus          # survival probability when in a patch (i.e. when handling food)
-mur <- .9           # survival probability when in refuge
-p1 <- 1
-p2 <- 1             # p2 = 0 because only one type of resource patch
+a <- 30 * 23       # area search rate (m2 / min) (i.e. width * speed)
+N1 <- 100 / 112000 # density of patch type 1  (patches / m2) (i.e., 100 patches in about 120 000 m2)
+#N2 <- N1          # density of patch type 2  (patches / m2)
+mus <- 0.5         # survival probability when travelling between patches
+muh <- mus         # survival probability when in a patch (i.e. when handling food)
+mur <- .9          # survival probability when in refuge
+#p1 <- 1
+#p2 <- 1           # p2 = 0 because only one type of resource patch
 
-hx <- 1:Tf          # h: min spent in a patch handing marbles
+hx <- 1:Tf         # h: min spent in a patch handing marbles
 # encounter (patch/min) * handling a patch (min/patch)
 ```
 
@@ -241,8 +251,6 @@ As you will see, the model does not directly identify the optimal diet. To deter
 Alldata1 <- matrix(c(Tr, hpatcha, totgain1), nrow = (length(Tr)), ncol = 3)
 colnames(Alldata1) <- c("Tr", "hpatch", "e_intra")
 
-# Expliquer cette section pour voir si je sépare
-
 # Encounter rate (m2 / min * patch / m2 = patch / min) with patch of type 1
 # (only this type present)
 lambdaAll1 <- a * N1
@@ -256,8 +264,6 @@ timeto_search_handl1 <- Timepatch_enc1 + hpatcha
 # total no of patches visited during Tf
 tot_patch_process_during_Tf <- (Tf - Tr) / timeto_search_handl1
 Num_patches <- tot_patch_process_during_Tf
-
-# expliquer cette section pour voir si je sépare
 
 # modulo to get min remaining
 remaining <- (Tf - Tr) %% timeto_search_handl1
@@ -273,8 +279,7 @@ nb_patch_fullyhandl <- ifelse(
 
 # gain in the last patch is not fully handled
 bbbb <- ifelse(diff1 < 0, totgain_temp[remaining], 0)
-# search time at the end.
-# = 0 if last patch not fully consumed, remaining otherwise
+# search time at the end. =0 if last patch not fully consumed, remaining otherwise
 cccc <- ifelse(diff1 < 0, 0, diff1)
 # time spent handling last patch if only partially consumed
 dddd <- ifelse(diff1 < 0, remaining, 0)
@@ -309,12 +314,24 @@ colnames(zz) <- c(
 # Long-term expected gain, overall risk, handling rate
 # number of stations fully consumed
 # time spent searching, handling, in refuge
-cc1 <- c(
+Value_given_optimal_behaviour <- c(
     Eall1[loc1], gain_duringTf[loc1],
     mu[loc1], hpatcha[loc1], nb_patch_fullyhandl[loc1],
     Ts_inter[loc1], Th1[loc1], Tr[loc1]
 )
-cc1
+
+# Long-term expected gain, overall risk, handling rate
+# number of stations fully consumed
+# time spent searching, handling, in refuge
+Variable1 <- c(
+  "realized gain ($)", "gain_no_pred",
+  "overall mortality risk", "Patch resience time (min)",
+  "nb of patches fully handled", "Total time searching patches (min)",
+  "Total time in patches (min)", "total time in refuge (min)"
+)
+
+c <- cbind(Variable1, Value_given_optimal_behaviour)
+
 ```
 
 
@@ -328,13 +345,17 @@ The code generates a figure showing the gain rate ($ / time spent in patch) that
 timex <- 1:length(totgain_temp)
 timex <- timex + Ts_inter[loc1]
 gain <- totgain_temp / timex
+#gain2 <- Eall1/timex #plot(timex, gain)
 
 dat <- data.frame(x = timex, y = gain)
 
+# library(ggplot2)
 ggplot(data = dat, aes(x = x, y = y)) +
     geom_line(linewidth = 1.5, color = "firebrick1") +
-    xlab("\nTime (units?)") +
-    ylab("Gain (units?)\n") +
+    xlab("\nTime spent in a patch (min)") +
+    ylab("Gain rate in each patch ($ / min)\n") +
+    scale_x_continuous(breaks = seq(0, 30, 6), limits = c(5.5, 34)) +
+    scale_y_continuous(breaks = seq(0, 30, 6), limits = c(6, 30)) +
     theme_bw(base_size = 15) +
     theme(panel.grid = element_blank())
 ```
