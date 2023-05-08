@@ -19,7 +19,7 @@ output:
     highlight: zenburn
     theme: flatly
     df_print: paged
-    code_folding: show
+    code_folding: hide
 bibliography: references1.bib
 nocite: |
   @McElreath2020
@@ -76,12 +76,12 @@ Here, we will work with a simpler version of the models presented in the paper. 
 
 The player behaviour data was collected by the videogame company Behaviour Interactive between March 20 2019 and June 17 2019. Every player initiated their first match between March 20 and March 22. This dataset summarizes behavioural data from matches played as the predator. For every match, the date (date-hour-minutes), the duration (seconds), the predator player's anonymous ID, the predator's avatar, and the game environment were recorded along with the predator and prey behaviours.
 
-Here is some basic information on the dataset :
-- Matches were played exclusively against a group of unknown people.
-- Minimum match duration was 5 minutes
-- Population of 2 378 players
-- 77 047 matches (average: 34 matches per individual, range: 1-1059 matches)
-- The average match duration was 11.13 minutes (range: 5-35 min).
+Here is some basic information on the dataset : 
+ - Matches were played exclusively against a group of unknown people.
+ - Minimum match duration was 5 minutes
+ - Population of 2 378 players
+ - 77 047 matches (average: 34 matches per individual, range: 1-1059 matches)
+ - The average match duration was 11.13 minutes (range: 5-35 min).
 
 
 ## Load the libraries
@@ -92,7 +92,7 @@ We will fit all our models using the package [`brms`](https://paul-buerkner.gith
 
 Lastly, we use the [`ggplot2`](https://ggplot2.tidyverse.org/) R package for our plots, and [`ggpubr`](https://rpkgs.datanovia.com/ggpubr/index.html) to combine multiple plots together.
 
-```{r}
+```{r, class.source = "fold-show"}
 
 # libraries
 library(data.table)
@@ -106,7 +106,7 @@ library(ggpubr)
 
 We directly import the data hosted on the public GitHub repository into our session.
 
-```{r}
+```{r, class.source = "fold-show"}
 
 # Type the repository's URL
 github <- "https://raw.githubusercontent.com/quantitative-ecologist"
@@ -140,7 +140,7 @@ setnames(data, "player_id", "predator_id")
 
 PO : ici je prendrais le temps de décrire un peu les variables et ce qu'elles représentent. 
 
-```{r}
+```{r, class.source = "fold-show"}
 # Print the data
 data
 
@@ -208,7 +208,7 @@ p
 
 ## Transforming and standardizing our variables
 
-```{r}
+```{r, class.source = "fold-show"}
 
 # Transform our variables
 data[, ":=" (
@@ -248,7 +248,7 @@ We use the `bf()` (for "**b**rms **f**ormula") in `brms` to write the model form
 For the predator's speed and rate of space covered, the model estimates a general intercept and two random effects which are the `avatar_id` and the `predator_id`. The model for the predator's latency before the first capture follows the same structure, but we include the match duration (`Zgame_duration`) as a fixed effect to control for differences in game length.
 The three sub models are modeled assuming a Gaussian distribution family of the residuals.
 
-```{r}
+```{r, class.source = "fold-show"}
 
 # Model for the predator's speed
 speed_form1 <- bf(
@@ -280,7 +280,7 @@ hook_form1 <- bf(
 
 The second model follows the same structure as the first, but includes the average speed and rate of space covered of the prey group (`Zprey_avg_speed` and `Zprey_avg_space_covered_rate`) as fixed effects for the three predator traits.
 
-```{r}
+```{r, class.source = "fold-show"}
 
 # Model for the predator's speed
 speed_form2 <- bf(
@@ -322,7 +322,7 @@ Lastly, the Bayesian approach requires that we define priors for the parameters 
 - source2
 - source3
 
-```{r}
+```{r, class.source = "fold-show"}
 
 # Priors for model 1
 priors1 <- c(
@@ -374,7 +374,7 @@ Estimating model parameters with MCMC can take a long time. You should thus save
 
 This is what we do here, we will directly import the two model outputs from our "models" folder (`.rds` files) as R objects into our session.
 
-```{r}
+```{r, class.source = "fold-show"}
 
 path <- file.path(getwd(), "models")
 
@@ -389,7 +389,7 @@ Here is the `brms` code that was used to run the first model (`fit1`) that we ju
 
 PO even if we do not want them to run the models, I would spend a little bit more time here going over the arguments? I would still avoid falling into the rabbit hole of everything one needs to know to fit a bayesian model, but just cite the relevant work for someone who would like to run models properly. 
 
-```{r eval = FALSE}
+```{r eval = FALSE, class.source = "fold-show"}
 
 # Model 1
 fit1 <- brm(
@@ -431,7 +431,7 @@ saveRDS(fit1, file = file.path(my_path, "mv_model1.rds"))
 
 And here is the `brms` code used to fit the second model, where we controlled for the prey's behaviour (`fit1`).
 
-```{r eval = FALSE}
+```{r eval = FALSE, class.source = "fold-show"}
 
 # Model 1
 fit2 <- brm(
@@ -475,13 +475,13 @@ Just to introduce quickle the chains? and set the table for the next section on 
 
 ## Model diagnostics
 
-### Assess model convergence
+### Inspect model convergence
 
 We first inspect the convergence of the chains for every parameter of interest using trace plots. We can deduce that the chains converged well when the trace plots are homogeneous.
 
 We start by extracting the model parameters that we want in a `data.frame`.
 
-```{r}
+```{r, class.source = "fold-show"}
 
 params <- as_draws_df(
   fit1, add_chain = TRUE,
@@ -508,15 +508,15 @@ Inspect the trace plots for the correlated random effects + the residual correla
 bayesplot::mcmc_trace(params, regex_pars = "cor", np = nuts_params(fit1))
 ```
 
-### Assess homogeneity of residuals
+### Inspect the residuals
 
 Here, we inspect our linear model assumptions by :
  - confirming that the residuals follow a gaussian distribution
  - confirming that the variance of the residuals is homogeneous
 
-We start by extracting the fitted values and residuals of the first model
+We start by extracting the fitted values and residuals for both models
 
-```{r resid-mod1, cache = TRUE}
+```{r resid-mod1, cache = TRUE, class.source = "fold-show"}
 
 # Residuals for model 1
 fitted1a <- fitted(fit1, resp = "Zpredspeed")[, 1]
@@ -529,9 +529,7 @@ fitted1c <- fitted(fit1, resp = "Zlatency1stcapture")[, 1]
 resid1c <- residuals(fit1, resp = "Zlatency1stcapture")[, 1]
 ```
 
-We do the same for the second model
-
-```{r resid-mod2, cache = TRUE}
+```{r resid-mod2, cache = TRUE, class.source = "fold-show"}
 # Residuals for model 2
 fitted2a <- fitted(fit2, resp = "Zpredspeed")[, 1]
 resid2a <- residuals(fit2, resp = "Zpredspeed")[, 1]
@@ -544,9 +542,9 @@ resid2c <- residuals(fit2, resp = "Zlatency1stcapture")[, 1]
 
 ```
 
-We then produce the plots and combine them together to inspect their distribution. We start with the 1st model.
+We then produce the plots and combine them together to inspect their distribution.
 
-```{r residplot-mod1, out.height="70%"}
+```{r residplot-mod1, fig.height = 5, fig.width = 15}
 
 assum1a <- ggplot() +
   geom_point(aes(x = fitted1a, y = resid1a), shape = 20, alpha = 0.05) +
@@ -554,7 +552,12 @@ assum1a <- ggplot() +
   ggtitle("Speed - model 1") +
   xlab("Fitted values") + ylab("Residuals") +
   theme_bw() +
-  theme(title = element_text(size = 8), panel.grid = element_blank())
+  theme(
+    title = element_text(size = 15),
+    axis.text = element_text(size = 12),
+    axis.title = element_text(size = 15),
+    panel.grid = element_blank()
+    )
 assum1a <- ggExtra::ggMarginal(assum1a, type = "histogram", margins = "y")
 
 assum1b <- ggplot() +
@@ -563,7 +566,12 @@ assum1b <- ggplot() +
   ggtitle("Space covered - model 1") +
   xlab("Fitted values") + ylab("Residuals") +
   theme_bw() +
-  theme(title = element_text(size = 8), panel.grid = element_blank())
+  theme(
+    title = element_text(size = 15),
+    axis.text = element_text(size = 12),
+    axis.title = element_text(size = 15),
+    panel.grid = element_blank()
+    )
 assum1b <- ggExtra::ggMarginal(assum1b, type = "histogram", margins = "y")
 
 assum1c <- ggplot() +
@@ -572,7 +580,12 @@ assum1c <- ggplot() +
   ggtitle("Latency 1st capture - model 1") +
   xlab("Fitted values") + ylab("Residuals") +
   theme_bw() +
-  theme(title = element_text(size = 8), panel.grid = element_blank())
+  theme(
+    title = element_text(size = 15),
+    axis.text = element_text(size = 12),
+    axis.title = element_text(size = 15),
+    panel.grid = element_blank()
+    )
 assum1c <- ggExtra::ggMarginal(assum1c, type = "histogram", margins = "y")
 
 # Combine all plots into a single figure
@@ -584,16 +597,19 @@ resids1 <- ggarrange(
 resids1
 ```
 
-We do the same with the second model.
-
-```{r residplot-mod2, fig.height="50%"}
+```{r residplot-mod2, fig.height = 5, fig.width = 15}
 assum2a <- ggplot() +
   geom_point(aes(x = fitted2a, y = resid2a), shape = 20, alpha = 0.05) +
   scale_y_continuous(breaks = seq(-8, 6, 2), limits = c(-8, 6)) +
   ggtitle("Speed - model 2") +
   xlab("Fitted values") + ylab("Residuals") +
   theme_bw() +
-  theme(title = element_text(size = 8), panel.grid = element_blank())
+  theme(
+    title = element_text(size = 15),
+    axis.text = element_text(size = 12),
+    axis.title = element_text(size = 15),
+    panel.grid = element_blank()
+    )
 assum2a <- ggExtra::ggMarginal(assum2a, type = "histogram", margins = "y")
 
 assum2b <- ggplot() +
@@ -602,7 +618,12 @@ assum2b <- ggplot() +
   ggtitle("Space covered - model 2") +
   xlab("Fitted values") + ylab("Residuals") +
   theme_bw() +
-  theme(title = element_text(size = 8), panel.grid = element_blank())
+  theme(
+    title = element_text(size = 15),
+    axis.text = element_text(size = 12),
+    axis.title = element_text(size = 15),
+    panel.grid = element_blank()
+    )
 assum2b <- ggExtra::ggMarginal(assum2b, type = "histogram", margins = "y")
 
 assum2c <- ggplot() +
@@ -611,7 +632,12 @@ assum2c <- ggplot() +
   ggtitle("Latency 1st capture - model 2") +
   xlab("Fitted values") + ylab("Residuals") +
   theme_bw() +
-  theme(title = element_text(size = 8), panel.grid = element_blank())
+  theme(
+    title = element_text(size = 15),
+    axis.text = element_text(size = 12),
+    axis.title = element_text(size = 15),
+    panel.grid = element_blank()
+    )
 assum2c <- ggExtra::ggMarginal(assum2c, type = "histogram", margins = "y")
 
 # Combine all plots into a single figure
@@ -623,9 +649,7 @@ resids2 <- ggarrange(
 resids2
 ```
 
-Short summary of checks.
-
-### Assess model fit
+### Inspect model fit
 
 We can then investigate how well the models predicted the data using [posterior predictive checks](https://mc-stan.org/bayesplot/reference/PPC-overview.html). Producing the plots may take some time depending on the complexity of your model and the size of your data. You can specify the number of draws to display using the `ndraws` argument within the `pp_check()` function.
 
@@ -676,18 +700,22 @@ fig2 <- ggarrange(
 fig2
 ```
 
-
-We then inspect how well the model captured the mean
-
-
+Overall, we can see that : 
+ - the chains converged well
+ - the model is not too bad at predicting the data 
+ - and the residuals seem to be OK.
+ 
+Yet, some improvements could make our models better. For instance, we could use more informative priors based on the scientific knowledge of the system (and other predator-prey systems) to improve the model fit. It is also possible that including other variables in our model could improve the predictions. Sometimes, it can also be helpful to increase the number of iterations in the model and posterior samples to have a better fit.
 
 ### Additional checks
 
-- Inspect overlap between prior and posterior distributions
+While the model verifications that we just did are probably among the most important ones, they cover only a small portion of the checks that you should perform to ensure that your model has been correctly specified. To go further, here is a list of useful links for additional checks: 
 
-```{r eval = FALSE}
+ - [MCMC diagnostics](https://mc-stan.org/bayesplot/articles/visual-mcmc-diagnostics.html) with the `bayesplot` package
+ - [Additional posterior predictive checks](https://mc-stan.org/bayesplot/articles/graphical-ppcs.html) with the `bayesplot` package
+ - [Additional residuals inspections](http://mjskay.github.io/tidybayes/articles/tidybayes-residuals.html) with the `tidybayes` package
 
-```
+Moreover, note that MCMC estimation can come with different convergence problems. Those problems can arise from different processes, but there will usually be a warning after the model fit telling you the problem. Here is a [useful link](https://mc-stan.org/misc/warnings.html) describing each of those problems, and the solutions that you can use to correct them.
 
 <br>
 
@@ -699,7 +727,7 @@ We then inspect how well the model captured the mean
 
 First, we may be interested in evaluating the fixed effects of our models. To ensure that the parameters are reliable, we will display their respective R-hat and effective sample sizes. We use a treshold of <1.01 for the R-hat values, and a threshold of <100 effective sample sizes as a decision rule for whether the model converged [@Burkner2017;@Vehtari.etal2021a].
 
-```{r}
+```{r, class.source = "fold-show"}
 
 # Prepare a data.table for model1
 checks1_1 <- data.table(
@@ -724,7 +752,7 @@ checks1
 
 We see that the values are within our thresholds. We can thus assume that the models converged, and proceed to evaluate and interpret the parameter values. We use the `summary()` function to display them along with their credible intervals.
 
-```{r}
+```{r, class.source = "fold-show"}
 
 # Select the fixed effects values with their 95% CIs in a data.table for model1
 fixed1_1 <- data.table(
@@ -753,7 +781,7 @@ fixed1
 
 We now inspect the random effects for the `avatar_id`. As we did with the fixed effects, we start by confirming whether the model converged by verifying the R-hats and effective sample sizes.
 
-```{r}
+```{r, class.source = "fold-show"}
 
 checks2_1 <- data.table(
   Model = "model1",
@@ -777,7 +805,7 @@ All the values seem to fall below the tresholds. We can now inspect the paramete
 
 The correlations (`cor`) between the predator avatars' average behaviours indicates whether, for example, avatars that were faster also captured their first prey faster (e.g. `cor(Zpredspeed_Intercept,Zlatency1stcapture_Intercept)`).
 
-```{r}
+```{r, class.source = "fold-show"}
 
 # Select the random effects with the estimated value along with their 95% CIs.
 ranefs1_1 <- data.table(
@@ -800,7 +828,7 @@ ranefs1
 
 ### Predator ID : Differences in behaviour among the individual predator players
 
-```{r}
+```{r, class.source = "fold-show"}
 
 checks3_1 <- data.table(
   Model = "model1",
@@ -820,7 +848,7 @@ checks3 <- rbind(checks3_1, checks3_2)
 checks3
 ```
 
-```{r}
+```{r, class.source = "fold-show"}
 
 # Select the random effects with the estimated value along with their 95% CIs.
 ranefs2_1 <- data.table(
@@ -841,6 +869,10 @@ ranefs2 <- rbind(ranefs2_1, ranefs2_2)
 ranefs2
 
 ```
+
+## Correlations among the random effects
+
+We now...
 
 <br>
 
