@@ -45,7 +45,7 @@ knitr::opts_chunk$set(
 
 This tutorial is part of the behavioural ecology work package presented during the [Sentinelle Nord advanced field school in computational ecology](http://dev.sentinellenord.ulaval.ca/en/ecology2023) held in May 2023 in Val-Morin, Québec, Canada.
 
-*In this tutorial, we will... (donner un mini aperçu de ce qui sera couvert.) On pourrait dire par exemple qu'on va utiliser l'optimal foraging theory pour prédire le comportement optimal durant TrophIE?*
+Optimal diet and optimal residency time can be combined in a hierarchical model of optimal foraging in patchy landscapes [@mcnamaraCombiningPreyChoice1993]. Prey then have to decide which prey type(s) should be consumed in each patch, and when they should leave the current patch. In risky environments, their decisions should also consider their risk of mortality when involved in different behaviour. Optimal decisions thus depend on multiple factors, including the risk of predation, the level of safety provided by refuges, the time required to handle each resource, and the gain of handling a given resource. In this tutorial, we will discuss how such set of optimal decisions can be identified from ecological theory.
 
 <br>
 
@@ -53,26 +53,20 @@ This tutorial is part of the behavioural ecology work package presented during t
 
 # Case study
 
-#### Multi-level foraging decisions of prey under predation risk in a landscape with refuges: How to become the richest possible? {.unnumbered}
+#### Multi-level foraging decisions of prey under predation risk in a landscape with refuges: How to become the richest possible! {.unnumbered}
 
-Optimal diet and optimal residency time can be combined in a hierarchical model of optimal foraging in patchy landscapes [@mcnamaraCombiningPreyChoice1993]. Prey then have to decide which prey type(s) should be consumed in each patch, and when they should leave the current patch. In risky environments, their decisions should also consider their risk of mortality when involved in different behaviour. Optimal decisions thus depend on multiple factors, including the risk of predation, the level of safety provided by refuges, the time required to handle each resource, and the gain of handling a given resource.
-
-What are the optimal multi-level foraging decisions under these conditions? We estimate this optimality problem numerically through a two-step process. First, we estimate the gain that can be expected within patches from the different possible foraging decisions. Each set of foraging decisions within the patches yields the total gain (g) during the residence time (t). Second, we use this information [g(t), t] as input to the inter-patch model to estimate the overall realized gain that can be expected during Tf = 30 min, given the global mortality risk. Although a PowerPoint presentation details the modeling approach, below we summarize the general method through an example. 
-
-
+What are the optimal multi-level foraging decisions under these conditions? We estimate this optimality problem numerically through a two-step process. First, we estimate the gain that can be expected within patches from the different possible foraging decisions. Each set of foraging decisions within the patches yields the total gain $(g)$ during the residence time $(t)$. Second, we use this information [$g(t), t$] as input to the inter-patch model to estimate the overall realized gain that can be expected during $T_{f}$ = 30 min, given the global mortality risk. Although a PowerPoint presentation details the modeling approach, below we summarize the general method through an example.
 <br>
 
 
 
 # The within-patch model
 
-Let's imagine that you have 30 minutes to collect "priceless" marbles without getting killed by predators looking for you. Hoards of marbles can be found in bags randomly placed in the environment. You cannot move or look inside the bags, which forces you to draw one marble at a time and decide if you want to keep it, a process taking lambda_in minutes. The bag contains 100 marbles of three types, one with no value and two with profitability e1/h1 and e2/h2. If you do not keep a marble, you have to put it back in the bag, whereas if you keep it, you need to spend h1 or h2 minutes handling it. Of course, the number of marbles of the type(s) you keep will decrease in the bag as you collect them, which is not the case for other types. The probability of drawing a marble of the type(s) you want therefore decreases over time. You must decide when you should give up looking in this bag and start search for another bag.
+Let's imagine that you have 30 minutes to collect "priceless" marbles without getting killed by predators looking for you. Hoards of marbles can be found in bags randomly placed in the environment. You cannot move or look inside the bags, which forces you to draw one marble at a time and decide if you want to keep it, a process taking lambda_in minutes. The bag contains 100 marbles of three types, one with no value and two with profitability  $\frac{e_{1}}{h_{1}}$ and $\frac{e_{2}}{h_{2}}$. If you do not keep a marble, you have to put it back in the bag, whereas if you keep it, you need to spend $h_{1}$ or $h_{2}$ minutes handling it. Of course, the number of marbles of the type(s) you keep will decrease in the bag as you collect them, which is not the case for other types. The probability of drawing a marble of the type(s) you want therefore decreases over time. You must decide when you should give up looking in this bag and start search for another bag.
 
 ## Model parameters
 
 A critical step is to determine the gain function, which depends on the drawing rate of marbles, the number of marbles of the different types, and whether or not a given type is collected, as well as its handling time and value. 
-
-We  now estimate the first step of the gain function g(0), starting from the animal's arrival in the patch. We consider a typical type II functional response [@fryxellIndividualBehaviorCommunity1997], where the encounter rate with each type of marble is the product of the "number of marbles that can be drawn per minute (lambda_in)" and the "proportion of that type of marble available in the bag" upon arrival in the patch (i.e., `N1_in_t0 / N_in_t0`). 
 
 ```{r}
 Tf <- 30               # game duration
@@ -92,11 +86,11 @@ p1_in <- 1             # if marble of type 1 are taken, p = 1; 0 otherwise
 p2_in <- 0             # if marble of type 2 are taken, p = 1; 0 otherwise
 ```
 
-The expected number of marbles of a given type available at the end of the step (`cons1_in_T0`) is directly related to the functional response (N.B. `e1_in` or `e2_in` have been removed) for each type of marble.
-
 ## Building the model
 
-Here, we define the starting values and create empty vectors that will be filled. 
+We  now estimate the first step of the gain function $g(0)$, starting from the animal's arrival in the patch. We consider a typical type II functional response [@fryxellIndividualBehaviorCommunity1997], where the encounter rate with each type of marble is the product of the "number of marbles that can be drawn per minute (i.e., `lambda_in`)" and the "proportion of that type of marble available in the bag" upon arrival in the patch (i.e., `N1_in_t0 / N_in_t0`). 
+
+The expected number of marbles of a given type available at the end of the step (`cons1_in_T0`) is directly related to the functional response (N.B. `e1_in` or `e2_in` have been removed) for each type of marble.
 
 ```{r}
 E_in_t0 <- ((lambda_in * (N1_in_t0 / N_in_t0) * e1_in * p1_in) +
@@ -115,7 +109,7 @@ cons2_in_T0 <- (lambda_in * (N2_in_t0 / N_in_t0) * p2_in) /
                (lambda_in * (N2_in_t0 / N_in_t0) * h2_in * p2_in))
 ```
 
-We  estimate the expected temporal changes in the number of marbles available at the end of each time step for each marble type, and use this information to calculate the gain function (`E_in_t`).
+Here, we define the starting values and create empty vectors that will be filled. 
 
 ```{r}
 E_in_t <- E_in_t0
@@ -135,7 +129,7 @@ vdenom <- numeric()
 
 ## Run the model
 
-Courte explication ici... (je ne suis pas sûr si c'est ce code qui roule le modèle)
+We  estimate the expected temporal changes in the number of marbles available at the end of each time step for each marble type, and use this information to calculate the gain function (`E_in_t`).
 
 ```{r}
 
@@ -200,8 +194,8 @@ dat <- data.frame(x = Residencytime, y = totgain)
 
 ggplot(data = dat, aes(x = x, y = y)) +
     geom_line(linewidth = 1.5, color = "dodgerblue") +
-    xlab("\nResidency time (units?)") +
-    ylab("Total gain (units?)\n") +
+    xlab("\nResidence time (min)") +
+    ylab("Total gain ($)\n") +
     scale_x_continuous(breaks = seq(0, 30, 6), limits = c(0, 30)) +
     scale_y_continuous(breaks = seq(0, 600, 150), limits = c(0, 600)) +
     theme_bw(base_size = 15) +
@@ -320,24 +314,34 @@ Value_given_optimal_behaviour <- c(
     Ts_inter[loc1], Th1[loc1], Tr[loc1]
 )
 
+Value_given_optimal_behaviour <- round(
+  Value_given_optimal_behaviour, digits = 2
+)
+
 # Long-term expected gain, overall risk, handling rate
 # number of stations fully consumed
 # time spent searching, handling, in refuge
-Variable1 <- c(
-  "realized gain ($)", "gain_no_pred",
-  "overall mortality risk", "Patch resience time (min)",
+Variable <- c(
+  "Realized gain ($)", "gain_no_pred",
+  "Overall mortality risk", "Patch resience time (min)",
   "nb of patches fully handled", "Total time searching patches (min)",
-  "Total time in patches (min)", "total time in refuge (min)"
+  "Total time in patches (min)", "Total time in refuge (min)"
 )
 
-c <- cbind(Variable1, Value_given_optimal_behaviour)
+c <- data.frame(Variable = Variable, Value = Value_given_optimal_behaviour)
 
+```
+
+The code generates two columns providing eight attributes of the simulation, including the behaviours yielding the highest payoffs, given the diet choice. We can look at the values by printing the `data.frame`.
+
+```{r}
+c
 ```
 
 
 ## Visualize the predictions
 
-The code generates a figure showing the gain rate ($ / time spent in patch) that can be expected in a patch, as a function of the time spent in that patch. The code also generates two columns providing eight attributes of the simulation, including the behaviours yielding the highest payoffs, given the diet choice. 
+Here, we generate a figure showing the gain rate ($ / time spent in patch) that can be expected in a patch, as a function of the time spent in that patch.
 
 ```{r}
 
