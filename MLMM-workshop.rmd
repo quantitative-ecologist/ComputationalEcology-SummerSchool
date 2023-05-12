@@ -1,12 +1,15 @@
-
 ---
-title: Sentinelle Nord Advanced Field School in Computational Ecology
+title: BIOS2 - Sentinelle Nord Advanced - Field School in Computational Ecology
 subtitle: Analysis of predator foraging behaviour using multivariate linear mixed models
 author:
-  - name: Maxime Fraser Franco
+  - name: | 
+        Maxime Fraser Franco : \
+        *developed the code for analyses and the Rmarkdown document*
     affiliation: Département des Sciences Biologiques & Centre de la Science de la Biodiversité du Québec, Université du Québec à Montréal
     email: fraser_franco.maxime@courrier.uqam.ca
-  - name: Pierre-Olivier Montiglio
+  - name: | 
+        Pierre-Olivier Montiglio : \
+        *developed the teaching material*
     affiliation: Département des Sciences Biologiques & Centre de la Science de la Biodiversité du Québec, Université du Québec à Montréal
     email: montiglio.pierre-olivier@uqam.ca
 date: "`r format(Sys.time(), '%d %B, %Y')`"
