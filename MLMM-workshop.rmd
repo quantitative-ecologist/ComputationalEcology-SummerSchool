@@ -29,6 +29,10 @@ nocite: |
   @Burkner2017
   @Burkner2018
   @FraserFranco.etal2022
+  @Piironen.Vehtari2017
+  @aczelDiscussionPointsBayesian2020
+  @kruschkeBayesianAnalysisReporting2021
+  @Vehtari.etal2017
 ---
 
 ```{r, include = FALSE}
@@ -142,7 +146,19 @@ setnames(data, "player_id", "predator_id")
 
 ### Data structure
 
-PO : ici je prendrais le temps de décrire un peu les variables et ce qu'elles représentent. 
+Here is a description of the variables.
+
+Continuous variables :
+- `pred_speed`: the average speed of the predator in meters per second (m/s)
+- `space_covered_rate`: the rate of space covered by the predator in the virtual environment in 16 m^{2} tiles per second (t/s)
+- `latency_1st_capture`: the time in seconds before the predator captured its first prey 
+- `prey_avg_speed`: the average speed of the four prey (m/s)
+- `prey_avg_space_covered_rate`: the average rate of space covered by the four prey (t/s)
+- `game_duration`: the game duration in seconds (s)
+
+Group variables :
+- `predator_id`: the unique ID of an individual predator player
+- `avatar_id`: the predator avatar that the player chose for the match
 
 ```{r, class.source = "fold-show"}
 # Print the data
