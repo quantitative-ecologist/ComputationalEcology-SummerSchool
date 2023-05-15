@@ -146,7 +146,7 @@ setnames(data, "player_id", "predator_id")
 
 ### Data structure
 
-Here is a description of the variables.
+Here is a description of the variables that we will use in our models.
 
 Continuous variables :
 - `pred_speed`: the average speed of the predator in meters per second (m/s)
@@ -257,15 +257,17 @@ data[
 
 ## Building the models
 
-### Model 1 - Hunting tactics without controlling for prey behaviour
-
-The following block of code shows the formula for the three traits we are modelling :
+The following blocks of code shows the formulas for the three traits we are modelling :
 
 - The predators's speed (`speed_form1`)
 - The predator's rate of space covered (`space_form1`)
 - The predator's latency before the first prey is captured (`hook_form1`)
 
 We use the `bf()` (for "**b**rms **f**ormula") in `brms` to write the model formulas. For the predator's speed and rate of space covered, the model estimates a general intercept and two random effects which are the `avatar_id` and the `predator_id`. The model for the predator's latency before the first capture follows the same structure, but we include the match duration (`Zgame_duration`) as a fixed effect to control for differences in game length. The three sub models are modeled assuming a Gaussian distribution family of the residuals.
+
+### Model 1 - Hunting tactics without controlling for prey behaviour
+
+*mathematical notation of the model*
 
 ```{r, class.source = "fold-show"}
 
@@ -298,6 +300,8 @@ hook_form1 <- bf(
 ### Model 2 - Hunting tactics controlling for prey behaviour
 
 The second model follows the same structure as the first, but includes the average speed and rate of space covered of the prey group (`Zprey_avg_speed` and `Zprey_avg_space_covered_rate`) as fixed effects for the three predator traits.
+
+*mathematical notation of the model*
 
 ```{r, class.source = "fold-show"}
 
@@ -531,7 +535,9 @@ bayesplot::mcmc_trace(params, regex_pars = "cor", np = nuts_params(fit1))
 
 Another important convergence check in analyses requiring MCMC sampling is to evaluate the $\hat{R}$ and effective sample sizes of each parameter of interest. In @Burkner2017, we can read that the effective sample size is : "the number of independent samples from the posterior distribution that would be expected to yield the same standard error of the posterior mean as is obtained from the dependent samples returned by the MCMC algorithm". In `brms`, the model summary provides an estimate of the bulk and tail effective sample sizes. The `Bulk_ESS` diagnoses the sampling efficiency of the bulk of the posterior (i.e. median or mean), while the `Tail_ESS` diagnoses the sampling efficiency of the tails of the posterior (i.e. 5% and 95% quantiles). We use a threshold of <100 effective sample sizes as a decision rule for whether the chains converged for the parameters [@Vehtari.etal2021a]. Conversely, the $\hat{R}$ is the potential scale reduction factor on split chains, which is a common diagnostic tool for whether the chains converged [@gelmanBayesianDataAnalysis2013;@Burkner2017]. Different versions and thresholds have been proposed for this measure [@gelmanInferenceIterativeSimulation1992;@gelmanBayesianDataAnalysis2013;@Vehtari.etal2021a], but we will use the most parsimonious one suggested by @Vehtari.etal2021a with a treshold set to <1.01.
 
-In `brms`, the values always appear beside the parameter means displayed using the `summary()` function. For simplicity, we display them in a `data.table`. Here are the values for the fixed effects, followed by those of the random effects + correlations :
+In `brms`, the values always appear beside the parameter means displayed using the `summary()` function. For simplicity, we display them in a `data.table`. We will inspect the values for the fixed effects, followed by those of the random effects + correlations.
+
+Here are the values for the fixed effects:
 
 ```{r}
 
@@ -556,6 +562,8 @@ checks1 <- rbind(checks1_1, checks1_2)
 checks1
 ```
 
+We then inspect the values for the `avatar_id` random effect:
+
 ```{r}
 
 checks2_1 <- data.table(
@@ -576,7 +584,29 @@ checks2 <- rbind(checks2_1, checks2_2)
 checks2
 ```
 
-All the values seem to fall below the tresholds, which is good.
+Lastly, we inspect the values for the `predator_id` random effect:
+
+```{r, class.source = "fold-show"}
+
+checks3_1 <- data.table(
+  Model = "model1",
+  round(summary(fit1)$random$predator_id[, c(5:7)], digits = 3),
+  keep.rownames = TRUE
+)
+setnames(checks3_1, old = "rn", new = "Parameter")
+
+checks3_2 <- data.table(
+  Model = "model2",
+  round(summary(fit2)$random$predator_id[, c(5:7)], digits = 3),
+  keep.rownames = TRUE
+)
+setnames(checks3_2, old = "rn", new = "Parameter")
+
+checks3 <- rbind(checks3_1, checks3_2)
+checks3
+```
+
+Looking at the three tables, it appears that all the values fall below the tresholds, which confirms that the chains have converged well.
 
 ### Inspect the residuals
 
@@ -854,26 +884,6 @@ ranefs1
 ```
 
 ### Predator ID : Differences in behaviour among the individual predator players
-
-```{r, class.source = "fold-show"}
-
-checks3_1 <- data.table(
-  Model = "model1",
-  round(summary(fit1)$random$avatar_id[, c(5:7)], digits = 3),
-  keep.rownames = TRUE
-)
-setnames(checks3_1, old = "rn", new = "Parameter")
-
-checks3_2 <- data.table(
-  Model = "model2",
-  round(summary(fit2)$random$avatar_id[, c(5:7)], digits = 3),
-  keep.rownames = TRUE
-)
-setnames(checks3_2, old = "rn", new = "Parameter")
-
-checks3 <- rbind(checks3_1, checks3_2)
-checks3
-```
 
 ```{r, class.source = "fold-show"}
 
