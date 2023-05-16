@@ -1,5 +1,5 @@
 ---
-title: BIOS2 - Sentinelle Nord Advanced - Field School in Computational Ecology
+title: BIOS2 - Sentinelle Nord - Advanced Field School in Computational Ecology
 subtitle: Analysis of predator foraging behaviour using multivariate linear mixed models
 author:
   - name: | 
