@@ -61,7 +61,7 @@ The analyses that we will conduct are derived from this study :
 
 - Fraser Franco, M., Santostefano, F., Kelly, C. D., Montiglio, P.-O. (2022). Data from: studying predator foraging mode and hunting success at the individual level with an online videogame. *Behavioral Ecology*. [https://doi.org/10.17605/OSF.IO/WYVRT](https://doi.org/10.17605/OSF.IO/WYVRT)
 
-The code and data to reproduce the analyses presented in the aforementioned paper are freely available on [GitHub](https://github.com/quantitative-ecologist/predator-foraging-mode-videogames)
+The code and data to reproduce the analyses presented in the aforementioned paper are freely available on [GitHub](https://github.com/quantitative-ecologist/predator-foraging-mode-videogames).
 
 <br>
 
@@ -73,7 +73,11 @@ In the study by Fraser Franco et al. (2022), the authors were interested in mapp
 
 To do so, they employed multivariate linear mixed models, an extension of standard mixed models where multiple response variables can be modeled simultaneously, and where relationships among the random effects of those response variables are estimated.
 
-Here, we will work with a simpler version of the models presented in the paper. All the results presented in the present workshop can be reproduced using the files provided in this [GitHub repository](https://github.com/quantitative-ecologist/ComputationEcology-SummerSchool)
+Here, we will work with a simpler version of the models presented in the paper. All the results presented in the present workshop can be reproduced using the files provided in this [GitHub repository](https://github.com/quantitative-ecologist/ComputationEcology-SummerSchool).
+
+All analyses in this tutorial were done using the R software, but note that they could also work in Python or Julia.
+
+*Note : Some code sections are folded to ease the interpretation and allow for a better flow of the work package. You can easily show the code by clicking on the "code" icons that are always displayed on the upper right corner of the outputs.*
 
 <br>
 
@@ -112,7 +116,7 @@ library(ggpubr)
 
 ## Import the data
 
-We directly import the data hosted on the public GitHub repository into our session.
+We directly import the data hosted on the public [GitHub](https://github.com/quantitative-ecologist/predator-foraging-mode-videogames) repository into our session.
 
 ```{r, class.source = "fold-show"}
 
@@ -149,14 +153,16 @@ setnames(data, "player_id", "predator_id")
 Here is a description of the variables that we will use in our models.
 
 Continuous variables :
+
 - `pred_speed`: the average speed of the predator in meters per second (m/s)
-- `space_covered_rate`: the rate of space covered by the predator in the virtual environment in 16 m^{2} tiles per second (t/s)
+- `space_covered_rate`: the rate of space covered by the predator in the virtual environment in 16 $m^{2}$ tiles per second (t/s)
 - `latency_1st_capture`: the time in seconds before the predator captured its first prey 
 - `prey_avg_speed`: the average speed of the four prey (m/s)
 - `prey_avg_space_covered_rate`: the average rate of space covered by the four prey (t/s)
 - `game_duration`: the game duration in seconds (s)
 
 Group variables :
+
 - `predator_id`: the unique ID of an individual predator player
 - `avatar_id`: the predator avatar that the player chose for the match
 
@@ -219,14 +225,9 @@ p <- ggplot(data = dat_hist, aes(x = value)) +
 p
 ```
 
-<br>
+### Data transformation
 
-
-
-# Fitting multivariate linear mixed effects model with `brms`
-
-
-## Transforming and standardizing our variables
+We saw that the latency before the first capture and the game duration are somewhat skewed and non Gaussian. In this tutorial, we use basic multivariate mixed-models (the non GLM version), which assume that the residuals are Gaussian. We will thus transform the latency before the first capture to ensure that this assumption is respected. We would usually not need to transform the game duration, but it will help the model to better assess the relationship by spreading the distribution towards the right.
 
 ```{r, class.source = "fold-show"}
 
@@ -236,6 +237,13 @@ data[, ":=" (
   game_duration = sqrt(game_duration)
   )
 ]
+```
+
+### Data standardization
+
+Lastly, before proceeding to run the models, we first standardize our variables to mean and unit variance.
+
+```{r, class.source = "fold-show"}
 
 # Standardize the variables
 standardize <- function(x) {
@@ -254,20 +262,82 @@ data[
 ]
 ```
 
+<br>
+
+
+
+# Fitting multivariate mixed-effects models with `brms`
+
 
 ## Building the models
 
-The following blocks of code shows the formulas for the three traits we are modelling :
+We now build the multivariate mixed-effects models for three predator foraging behaviours being the predator's average speed, rate of space covered, and latency before the first capture. As you will see, the two models follow a very similar structure.
 
-- The predators's speed (`speed_form1`)
-- The predator's rate of space covered (`space_form1`)
-- The predator's latency before the first prey is captured (`hook_form1`)
+**In the first model**, we are interested in modelling the predator foraging behaviour without any effects of the prey. The goal is to describe the predator's foraging tactics in its most "basic" form.
 
-We use the `bf()` (for "**b**rms **f**ormula") in `brms` to write the model formulas. For the predator's speed and rate of space covered, the model estimates a general intercept and two random effects which are the `avatar_id` and the `predator_id`. The model for the predator's latency before the first capture follows the same structure, but we include the match duration (`Zgame_duration`) as a fixed effect to control for differences in game length. The three sub models are modeled assuming a Gaussian distribution family of the residuals.
+**In the second model**, we build upon the first model, but we include the prey's behaviour as fixed effects. This will help us assess whether the predator's foraging tactics described in the first model change after removing the effect of the prey's average speed and rate of space covered.
 
-### Model 1 - Hunting tactics without controlling for prey behaviour
+If we see a difference in the predator's foraging tactics between the two models, then we can infer that the prey are driving the predator's foraging tactics. 
 
-*mathematical notation of the model*
+Both models can be described mathematically with the following equations :
+
+\begin{align}
+    speed &= X_\ b + M\ av + N\ id + e \tag{eqn. 1} \\
+    space &= X_\ b + M\ av + N\ id + e \tag{eqn. 2} \\
+    latency &= X_\ b + M\ av + N\ id + e \tag{eqn. 3} 
+\end{align}
+
+where $av$, and $id$ are the vectors of random avatar, and random individual identity effects associated with their incidence matrices $M$ and $N$. $b$ is the vector of fixed effects with its incidence matrix $X$. Lastly, $e$ is the error term corresponding to the residuals. In the first model, the fixed effects correspond only to a general intercept + the game duration for the latency before the first capture. In the second model, the fixed effects include a global intercept along with the slope terms of the prey's speed and rate of space covered + the game duration for the latency before the first capture.
+
+The random effects and residuals follow a multivariate Gaussian distribution, where $\Sigma$ is a 3x3 variance-covariance matrix:
+
+\begin{align}
+\begin{bmatrix}
+    av_{speed} \\ av_{space} \\ av_{latency}
+\end{bmatrix}
+&\sim MVN(0,\ \Sigma_{av}): \Sigma_{av} =
+\begin{bmatrix}
+    V_{av_{speed}} & & \\
+    Cov_{av_{speed}\ av_{space}} & V_{av_{space}} & \\
+    Cov_{av_{speed}\ av_{latency}} & Cov_{av_{space}\ av_{latency}} & V_{av_{latency}}
+\end{bmatrix} \tag{eqn. 4} \\
+
+\begin{bmatrix}
+    id_{speed} \\ id_{space} \\ id_{latency}
+\end{bmatrix}
+&\sim MVN(0,\ \Sigma_{id}): \Sigma_{id} =
+\begin{bmatrix}
+    V_{id_{speed}} & & \\
+    Cov_{id_{speed}\ id_{space}} & V_{id_{space}} & \\
+    Cov_{id_{speed}\ id_{latency}} & Cov_{id_{space}\ id_{latency}} & V_{id_{latency}}
+\end{bmatrix} \tag{eqn. 5} \\
+
+\begin{bmatrix}
+    e_{speed} \\ e_{space} \\ e_{latency}
+\end{bmatrix}
+&\sim MVN(0,\ \Sigma_{e}): \Sigma_{e} =
+\begin{bmatrix}
+    V_{e_{speed}} & & \\
+    Cov_{e_{speed}\ e_{space}} & V_{e_{space}} & \\
+    Cov_{e_{speed}\ e_{latency}} & Cov_{e_{space}\ e_{latency}} & V_{e_{latency}}
+\end{bmatrix} \tag{eqn. 6}
+\end{align}
+
+The variance-covariance matrices (i.e. equations 4 to 6) is the part of the model enabling us to determine the structure of the predator's foraging tactics. For instance, at the individual level, if we see that the predator's speed and latency before the first capture are negatively correlated, then we can infer that faster predators are more efficient because they take less time to capture their first prey. On the other hand, the residual correlations tell a similar story, but at the within-individual level. Thus, using the same correlation as an example, we could say that matches in which predators were faster were also matches in which they were more efficient at capturing the prey. Alternatively, if individuals were slower in other matches, then they were not as efficient.
+
+In the next subsections, we will write our models using the `brms` syntax. As you will see, we will use the `bf()` function (for "**b**rms **f**ormula") in `brms` to write the model formulas. We will employ these naming conventions for the equations describing the predator's traits (i.e. equation 1 to 3) :
+
+- Speed (`speed_form1` for model 1) (`speed_form2` for model 2)
+- Rate of space covered (`space_form1` for model 1) (`space_form2` for model 2)
+- Latency before the first capture (`hook_form1` for model 1) (`hook_form2` for model 2)
+
+### Model 1
+
+The following block of code shows the formulas for the three traits we are analyzing for model 1.
+
+For the predator's speed and rate of space covered, the model estimates a general intercept (1.e. the `1` term) and two random effects which are the `avatar_id` and the `predator_id`. The model for the predator's latency before the first capture follows the same structure, but we include the match duration (`Zgame_duration`) as a fixed effect to control for differences in game length.
+
+The `a` and `b` indicate that we want the model to estimate correlations among the random effects. Thus, the `avatar_id` and `predator_id` random effects will be correlated across the three traits. Note that in `brms`, you could have used any letter to estimate the correlations, as long as you keep the same letter across sub models.
 
 ```{r, class.source = "fold-show"}
 
@@ -297,11 +367,9 @@ hook_form1 <- bf(
 ) + gaussian()
 ```
 
-### Model 2 - Hunting tactics controlling for prey behaviour
+### Model 2
 
-The second model follows the same structure as the first, but includes the average speed and rate of space covered of the prey group (`Zprey_avg_speed` and `Zprey_avg_space_covered_rate`) as fixed effects for the three predator traits.
-
-*mathematical notation of the model*
+The second model follows the same structure as model 1, but includes the average speed and rate of space covered of the prey group (`Zprey_avg_speed` and `Zprey_avg_space_covered_rate`) as fixed effects for the three predator traits.
 
 ```{r, class.source = "fold-show"}
 
@@ -339,11 +407,11 @@ hook_form2 <- bf(
 
 ### Setting up priors
 
-Lastly, the Bayesian approach requires that we define priors for the parameters that the models will estimate. (brief explanation here). You can read more on priors in the following sources :
+Lastly, the Bayesian approach requires that we define priors for the parameters that the models will estimate. In short, priors can be defined as a probability distribution indicating the prior plausibilities of an uncertain quantity before evidence is taken into account. They are usually assumed and carefully chosen based on the scientific knowledge of the system to help the model at estimating parameters. Thus, they can be seen as an assumption of how your system of interest works.
 
-- source1
-- source2
-- source3
+Here is an example. Suppose that you want to estimate the relationship between species richness and forest cover using linear regression. Because we usually know that more habitat should support more species, we could use a prior on the slope term defined as a Gaussian distribution with mean of 0.5 and standard deviation of 1. This prior would be telling our model that the slope (relationship between species richness and land cover) should be positive with the most plausible value being 0.5, indicating a 0.5 unit increase in species richness for each unit of forest cover. This would be called a weakly informative prior, because the standard deviation of 1 still allows the model to search for a fair range of slope values around the mean of 0.5.
+
+In our case, because this was the first time that we modelled data in *Dead by Daylight*, we use weakly informative priors which impose constrains on the parameter estimation while also leaving it some freedom. Moreover, because we have a large dataset, the data should drive the posterior distribution of parameter values more than the prior. For more information on priors, you can read the marvellous book of @McElreath2020.
 
 ```{r, class.source = "fold-show"}
 
@@ -391,9 +459,11 @@ priors2 <- c(
 
 ## Run the models
 
-**Import the model into our session**
+**Import the model outputs into our session**
 
-Estimating model parameters with MCMC can take a long time. You should thus save your models outputs as R objects when they are finished running. You can then reupload the model objects into an R session and manipulate them for your needs (e.g. for plots and tables).
+Estimating model parameters with MCMC can take a long time. Moreover, the more data you have, the longer the computation will be. For example, in a single script, both models together took around 1.5 hours to run on a supercomputer with 64Gb of RAM and 48 computer cores.
+
+Thus, whenever your models take some time to run, you should save their results (e.g. as `.rds` files or any other file depending on your programming language) when they have finished running. You can then reupload the model outputs as R objects into an R session and manipulate them for your needs (e.g. for checks, plots, and tables).
 
 This is what we do here, we will directly import the two model outputs from our "models" folder (`.rds` files) as R objects into our session.
 
@@ -405,12 +475,9 @@ fit1 <- readRDS(file.path(path, "mv_model1.rds"))
 fit2 <- readRDS(file.path(path, "mv_model2.rds"))
 ```
 
-
-**Code for Model 1 where we do not account for prey behaviour :**
+### Code to run model 1
 
 Here is the `brms` code that was used to run the first model (`fit1`) that we just imported. We used the `brm()` function to parameterize and initiate the sampling.
-
-PO even if we do not want them to run the models, I would spend a little bit more time here going over the arguments? I would still avoid falling into the rabbit hole of everything one needs to know to fit a bayesian model, but just cite the relevant work for someone who would like to run models properly. 
 
 ```{r eval = FALSE, class.source = "fold-show"}
 
@@ -450,7 +517,7 @@ my_path <- file.path(getwd(), "your_folder")
 saveRDS(fit1, file = file.path(my_path, "mv_model1.rds"))
 ```
 
-**Code for Model 2 where we control for prey behaviour :**
+### Code to run model 2
 
 And here is the `brms` code used to fit the second model, where we controlled for the prey's behaviour (`fit2`).
 
@@ -493,14 +560,13 @@ saveRDS(fit2, file = file.path(my_path, "mv_model2.rds"))
 ```
 
 
-PO Perhaps a few sentences here explaining what the model fitting does? 
-Just to introduce quickle the chains? and set the table for the next section on diagnostics, where we play with these components. 
-
 ## Model diagnostics
+
+Now that our models have finished running, it is paramount that we do some checks to confirm that the parameters are reliable. Completing these steps is crucial to ensure that the biological interpretations we will do afterwards make sense. Otherwise, you could be up for unpleasant surprises.
 
 ### Inspect model convergence
 
-We first inspect the convergence of the chains for every parameter of interest using trace plots. We can deduce that the chains converged well when the trace plots are homogeneous.
+We first inspect the convergence of the chains for every parameter of interest using trace plots. We can deduce that the chains converged well when the trace plots are homogeneous. For simplicity, we will only inspect the chains of the first model, but remember that we should do the same steps for the second model too.
 
 We start by extracting the model parameters that we want in a `data.frame`.
 
@@ -586,7 +652,7 @@ checks2
 
 Lastly, we inspect the values for the `predator_id` random effect:
 
-```{r, class.source = "fold-show"}
+```{r}
 
 checks3_1 <- data.table(
   Model = "model1",
@@ -752,7 +818,9 @@ resids2
 
 ### Inspect model fit
 
-We can then investigate how well the models predicted the data using [posterior predictive checks](https://mc-stan.org/bayesplot/reference/PPC-overview.html). Producing the plots may take some time depending on the complexity of your model and the size of your data. You can specify the number of draws to display using the `ndraws` argument within the `pp_check()` function.
+We can then investigate how well the models predicted the data using [posterior predictive checks](https://mc-stan.org/bayesplot/reference/PPC-overview.html). Posterior predictive checks use simulated data from the posterior predictive distribution of a model and compares it to the raw data used to fit the model. @gabryVisualizationBayesianWorkflow2019 suggest that if a model is a good fit, then the data generated by it should ressemble the data that was observed.
+
+Producing the plots may take some time depending on the complexity of your model and the size of your data. You can specify the number of draws to display using the `ndraws` argument within the `pp_check()` function.
 
 ```{r ppchek1-mod1, cache = TRUE}
 
@@ -818,8 +886,9 @@ While the model verifications that we just did are probably among the most impor
 - [MCMC diagnostics](https://mc-stan.org/bayesplot/articles/visual-mcmc-diagnostics.html) with the `bayesplot` package
 - [Additional posterior predictive checks](https://mc-stan.org/bayesplot/articles/graphical-ppcs.html) with the `bayesplot` package
 - [Additional residuals inspections](http://mjskay.github.io/tidybayes/articles/tidybayes-residuals.html) with the `tidybayes` package
+- [Leave-one-out cross-validation](https://link.springer.com/article/10.1007/s11222-016-9696-4) using Pareto-smoothed importance sampling for predictive performance and model comparisons. For important references consult the [loo FAQ](https://avehtari.github.io/modelselection/CV-FAQ.html), [the roaches model example](https://avehtari.github.io/modelselection/roaches.html), and the [loo package vignette](http://mc-stan.org/loo/articles/index.html)
 
-Moreover, note that MCMC estimation can come with different convergence problems. Those problems can arise from different processes, but there will usually be a warning after the model fit telling you the problem. Here is a [useful link](https://mc-stan.org/misc/warnings.html) describing each of those problems, and the solutions that you can use to correct them.
+Moreover, note that MCMC estimation can come with different convergence problems. Those problems can arise from different processes, but `brms` (and other packages using MCMC) should print warnings outlining the potential problems after the model has finished running. Here is a [useful link](https://mc-stan.org/misc/warnings.html) describing each of those problems and their solutions.
 
 <br>
 
@@ -827,11 +896,14 @@ Moreover, note that MCMC estimation can come with different convergence problems
 
 # Interpret the models' results
 
+
 ## Fixed effects: population-level parameters
 
-First, we may be interested in evaluating the fixed effects of our models. We use the `summary()` function to display them along with their credible intervals.
+Now that we confirmed that our two models can be trusted, we will first evaluate their fixed effects. We use the `summary()` function to display them along with their credible intervals. In `brms`, the fixed effects are called population-level parameters.
 
-```{r, class.source = "fold-show"}
+The table contains the parameter values of the two models so you can compare them easily. The parameters are the general intercepts along with the slope terms of each covariate.
+
+```{r}
 
 # Select the fixed effects values with their 95% CIs in a data.table for model1
 fixed1_1 <- data.table(
@@ -851,8 +923,12 @@ setnames(fixed1_2, old = "rn", new = "Parameter")
 
 # Combine the results from both models as one table
 fixed1 <- rbind(fixed1_1, fixed1_2)
+
 fixed1
 ```
+
+Description des résultats...
+
 
 ## Random effects: group-level parameters
 
@@ -862,7 +938,7 @@ We now inspect the random effects for the `avatar_id`. In `brms`, the random eff
 
 The correlations (`cor`) between the predator avatars' average behaviours indicates whether, for example, avatars that were faster also captured their first prey faster (e.g. `cor(Zpredspeed_Intercept,Zlatency1stcapture_Intercept)`).
 
-```{r, class.source = "fold-show"}
+```{r}
 
 # Select the random effects with the estimated value along with their 95% CIs.
 ranefs1_1 <- data.table(
@@ -883,9 +959,11 @@ ranefs1 <- rbind(ranefs1_1, ranefs1_2)
 ranefs1
 ```
 
+Description des résultats...
+
 ### Predator ID : Differences in behaviour among the individual predator players
 
-```{r, class.source = "fold-show"}
+```{r}
 
 # Select the random effects with the estimated value along with their 95% CIs.
 ranefs2_1 <- data.table(
@@ -907,13 +985,21 @@ ranefs2
 
 ```
 
-## Correlations among the random effects
+Description des résultats...
 
-We now...
+
+## Additional analyses : variance partitionning
+
+courte description du partitionnement de la variance et pointer aux références pertinentes ou à mon article.
 
 <br>
 
 
-# References {.unnumbered}
+
+# Summary: ecological inference
+
+Description des résultats obtenus et interprétations biologiques
+
+# References and suggested readings {.unnumbered}
 
 <div id="refs"></div>
