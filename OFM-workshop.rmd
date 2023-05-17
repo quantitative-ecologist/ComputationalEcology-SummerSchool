@@ -23,7 +23,15 @@ output:
     theme: flatly
     df_print: paged
     code_folding: show
-bibliography: references.bib
+bibliography: refs-OFM.bib
+nocite: |
+  @fryxellIndividualBehaviorCommunity1997
+  @houston2014
+  @kacelnik1990
+  @macarthurOptimalUsePatchy1966
+  @mcnamara1993
+  @richardson1986
+  @sih2001a
 ---
 
 
@@ -45,7 +53,7 @@ knitr::opts_chunk$set(
 
 This tutorial is part of the behavioural ecology work package presented during the [Sentinelle Nord advanced field school in computational ecology](http://dev.sentinellenord.ulaval.ca/en/ecology2023) held in May 2023 in Val-Morin, Québec, Canada.
 
-Optimal diet and optimal residency time can be combined in a hierarchical model of optimal foraging in patchy landscapes [@mcnamaraCombiningPreyChoice1993]. Prey then have to decide which prey type(s) should be consumed in each patch, and when they should leave the current patch. In risky environments, their decisions should also consider their risk of mortality when involved in different behaviour. Optimal decisions thus depend on multiple factors, including the risk of predation, the level of safety provided by refuges, the time required to handle each resource, and the gain that comes with handling a given resource. In this tutorial, we will discuss how such set of optimal decisions can be identified from ecological theory.
+Optimal diet and optimal residency time can be combined in a hierarchical model of optimal foraging in patchy landscapes [@mcnamara1993]. Prey then have to decide which prey type(s) should be consumed in each patch, and when they should leave the current patch. In risky environments, their decisions should also consider their risk of mortality when involved in different behaviour. Optimal decisions thus depend on multiple factors, including the risk of predation, the level of safety provided by refuges, the time required to handle each resource, and the gain that comes with handling a given resource. In this tutorial, we will discuss how such set of optimal decisions can be identified from ecological theory.
 
 <br>
 
