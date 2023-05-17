@@ -411,7 +411,35 @@ Lastly, the Bayesian approach requires that we define priors for the parameters 
 
 Here is an example. Suppose that you want to estimate the relationship between species richness and forest cover using linear regression. Because we usually know that more habitat should support more species, we could use a prior on the slope term defined as a Gaussian distribution with mean of 0.5 and standard deviation of 1. This prior would be telling our model that the slope (relationship between species richness and land cover) should be positive with the most plausible value being 0.5, indicating a 0.5 unit increase in species richness for each unit of forest cover. This would be called a weakly informative prior, because the standard deviation of 1 still allows the model to search for a fair range of slope values around the mean of 0.5.
 
-In our case, because this was the first time that we modelled data in *Dead by Daylight*, we use weakly informative priors which impose constrains on the parameter estimation while also leaving it some freedom. Moreover, because we have a large dataset, the data should drive the posterior distribution of parameter values more than the prior. For more information on priors, you can read the marvellous book of @McElreath2020.
+Here is a simulated example to see what this prior looks like :
+```{r sim-prior}
+# n = 1000
+set.seed(123)
+dat <- data.frame(vec = rnorm(1000, mean = 0.5, sd = 1))
+avg <- mean(dat$vec)
+
+p1 <- ggplot(dat, aes(x = vec)) +
+  geom_histogram(
+    aes(y = after_stat(density)),
+    col = "black", fill = "gray"
+  ) +
+  geom_density(alpha = 0.2, fill = "dodgerblue") +
+  geom_vline(
+    xintercept = avg,
+    linetype = "dashed", linewidth = 1.5,
+    col = "black"
+  ) +
+  ggtitle("n = 1000") +
+  xlab("\npossible slope values") +
+  ylab("density\n") +
+  theme_bw(base_size = 12) +
+  theme(panel.grid = element_blank())
+p1
+```
+
+You can see that the range of plausible values for the slope ranges from ~-2 to ~4 with the most plausible value being 0.5 (i.e. the black dashed line).
+
+In our case, because this was the first time that we modelled data in *Dead by Daylight*, we use weakly informative priors which impose constrains on the parameter estimation while also leaving it some freedom. Moreover, because we have a large dataset, the data should drive the posterior distribution of parameter values more than the prior. For more information on priors, you can read the marvellous book of [Richard McElreath called Statistical Rethinking](https://xcelab.net/rm/statistical-rethinking/). 
 
 ```{r, class.source = "fold-show"}
 
@@ -869,6 +897,8 @@ fig2 <- ggarrange(
 fig2
 ```
 
+Here, $y$ is the distribution of our data, and $y_{rep}$ is the distribution simulated data from the model's posterior predictive distribution. If the model is a good fit, we should se a strong overlap between the curves, which is mostly the case here except for the predator's speed. For speed, we see that our observed data (i.e. %y%) is a bit off on the left compared to the simulated data from our model. We could thus in theory adjust the model in some way to increase it's predictive power.
+
 ### Summary
 
 Overall, we can see that :
@@ -885,7 +915,7 @@ While the model verifications that we just did are probably among the most impor
 
 - [MCMC diagnostics](https://mc-stan.org/bayesplot/articles/visual-mcmc-diagnostics.html) with the `bayesplot` package
 - [Additional posterior predictive checks](https://mc-stan.org/bayesplot/articles/graphical-ppcs.html) with the `bayesplot` package
-- [Additional residuals inspections](http://mjskay.github.io/tidybayes/articles/tidybayes-residuals.html) with the `tidybayes` package
+- [Additional residuals inspections](http://mjskay.github.io/tidybayes/articles/tidybayes-residuals.html) with the `tidybayes` package. For instance, you could inspect the relationship between the residuals and your fixed effects to see if the model failed at describing some features. This will be important for biological interpretations.
 - [Leave-one-out cross-validation](https://link.springer.com/article/10.1007/s11222-016-9696-4) using Pareto-smoothed importance sampling for predictive performance and model comparisons. For important references consult the [loo FAQ](https://avehtari.github.io/modelselection/CV-FAQ.html), [the roaches model example](https://avehtari.github.io/modelselection/roaches.html), and the [loo package vignette](http://mc-stan.org/loo/articles/index.html)
 
 Moreover, note that MCMC estimation can come with different convergence problems. Those problems can arise from different processes, but `brms` (and other packages using MCMC) should print warnings outlining the potential problems after the model has finished running. Here is a [useful link](https://mc-stan.org/misc/warnings.html) describing each of those problems and their solutions.
