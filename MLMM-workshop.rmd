@@ -187,7 +187,7 @@ length(unique(data$predator_id))
 ### Distribution of variables
 ```{r histograms-data, out.width="100%", out.height="70%"}
 
-# Reshape the data to plot multiple histograms -----------------------------------
+# Reshape the data to plot multiple histograms ---------------------------------
 
 # Select the needed variables
 dat_hist <- data[
@@ -207,7 +207,7 @@ dat_hist <- melt(
 
 
 
-# Plot the histograms ------------------------------------------------------------
+# Plot the histograms ----------------------------------------------------------
 
 # Panel labels
 labels <- labeller(
@@ -740,6 +740,7 @@ resid1c <- residuals(fit1, resp = "Zlatency1stcapture")[, 1]
 ```
 
 ```{r resid-mod2, cache = TRUE, class.source = "fold-show"}
+
 # Residuals for model 2
 fitted2a <- fitted(fit2, resp = "Zpredspeed")[, 1]
 resid2a <- residuals(fit2, resp = "Zpredspeed")[, 1]
@@ -749,7 +750,6 @@ resid2b <- residuals(fit2, resp = "Zspacecoveredrate")[, 1]
 
 fitted2c <- fitted(fit2, resp = "Zlatency1stcapture")[, 1]
 resid2c <- residuals(fit2, resp = "Zlatency1stcapture")[, 1]
-
 ```
 
 We then produce the plots and combine them together to inspect their distribution.
@@ -808,6 +808,7 @@ resids1
 ```
 
 ```{r residplot-mod2, fig.height = 5, fig.width = 15}
+
 assum2a <- ggplot() +
   geom_point(aes(x = fitted2a, y = resid2a), shape = 20, alpha = 0.05) +
   scale_y_continuous(breaks = seq(-8, 6, 2), limits = c(-8, 6)) +
@@ -993,13 +994,13 @@ We also see that the populations mean (i.e. the Intercepts) of the predator's sp
 
 ## Random effects: group-level parameters
 
-### Predator ID : Differences in behaviour among the individual predator players
+### Predator ID : Differences in behaviour among individual predators
 
-As we mentionned before, we controlled for the predator player's avatar, which is an artifact of the system since it is a videogame. Because we are not interested in anything biological about this effect, we won't present their results here, and go directly to describe the results for the predator ID (`predator_id`), that is, among individual differences in behaviour. 
+As we mentionned before, we controlled for the predator player's avatar, which is a feature of the system since it is a videogame. Because we are not interested in anything biological about this effect, we won't present its results here, and go directly to describe the results for the predator ID (`predator_id`), that is, **among individual differences in behaviour**. 
 
-In `brms`, the random effects are displayed as standard deviations (`sd`). Thus, the random effects in our models are standard deviations estimated for each predator trait. The value of the standard deviations indicates whether predator players differ in their predicted average behaviours. For example, the value of `0.557` for the predator's speed indicates that there are moderate differences among individuals in their average speed. Thus, some players are slower while others are faster on average.
+In `brms`, the random effects are displayed as standard deviations (`sd`). Thus, the random effects in our models are standard deviations estimated for each predator trait. The standard deviation values indicate whether predator players differ in their predicted average behaviours. For example, the value of `0.557` for the predator's speed indicates that there are moderate differences among individuals in their average speed. Thus, some players are slower while others are faster on average.
 
-The correlations (`cor`) between the predator players' average behaviours indicates whether, for example, individuals that were faster also captured their first prey faster (e.g. `cor(Zpredspeed_Intercept,Zlatency1stcapture_Intercept)`).
+Here is a table showing the standard deviations of model 1 and model 2:
 
 ```{r}
 
@@ -1018,11 +1019,150 @@ ranefs2 <- data.table(
 )
 setnames(ranefs2, old = "rn", new = "Parameter")
 
-ranefs <- rbind(ranefs1, ranefs2)
-ranefs
+# Standard deviations table
+ranefs_a <- rbind(
+  ranefs1[Parameter %like% "sd"],
+  ranefs2[Parameter %like% "sd"]
+)
+
+# Display the standard deviations table
+ranefs_a
 ```
 
-Description des résultats...
+We can see that the standard deviation for speed does not really change. There is however a decrease in standard deviation for the predator's rate of space coverage when controlling for prey behaviour, and a smaller decrease in the standard deviation for the latency before the first capture. This indicates that among individual differences stay the same for the predator's speed, but differences among individuals decrease when we control for the prey's movement.
+
+Note that we are presently comparing the values qualitatively. You could however compare them quantitatively using contrasts. The procedure would be to extract the posterior distributions of the six standard deviation values, compute the differences between each simulated value, and then report the posterior mean difference along with a range of credible intervals for each combination of standard deviations being compared.
+
+### Predator ID : Correlations between predator behaviours
+
+The correlations (`cor`) between the predator players' average behaviours indicates whether, for example, individuals that were faster also captured their first prey faster (e.g. `cor(Zpredspeed_Intercept,Zlatency1stcapture_Intercept)`). We visualize the correlation values with their credible intervals :
+
+```{r}
+
+# Correlations table
+ranefs_b <- rbind(
+  ranefs1[Parameter %like% "cor"],
+  ranefs2[Parameter %like% "cor"]
+)
+
+ranefs_b
+```
+
+A better way to visualize and compare them is using a correlation matrix.
+
+```{r, cor-mat, fig.height = 8, fig.width = 15}
+
+# Prepare the data for the plots -----------------------------------------------
+
+# Add variable combinations
+ranefs_b[
+  , ":=" (
+    var1 = c(
+      "speed", "speed", "space",
+      "speed", "speed", "space"
+    ),
+    var2 = c(
+      "space", "latency", "latency",
+      "space", "latency", "latency"
+    )
+  )
+]
+
+
+# Table model1 for the correlation matrix
+cormat1 <- ranefs_b[Model == "model1", .(var1, var2, Estimate)]
+rows1 <- data.table(
+  var1 = c("speed", "space", "latency"),
+  var2 = c("speed", "space", "latency"),
+  Estimate = c(1, 1, 1)
+)
+cormat1 <- rbind(cormat1, rows1)
+
+# Table model 2 for the correlation matrix 
+cormat2 <- ranefs_b[Model == "model2", .(var1, var2, Estimate)]
+rows2 <- data.table(
+  var1 = c("speed", "space", "latency"),
+  var2 = c("speed", "space", "latency"),
+  Estimate = c(1, 1, 1)
+)
+cormat2 <- rbind(cormat2, rows2)
+
+
+
+# Plot the data ----------------------------------------------------------------
+
+# One global custom theme
+custom_theme <- theme(
+    panel.grid = element_blank(),
+    axis.title = element_blank(),
+    axis.text = element_text(size = 16),
+    plot.title = element_text(size = 18),
+    legend.title = element_text(size = 14),
+    legend.text = element_text(size = 12),
+    legend.key.width = unit(4, "cm")
+  )
+
+# Correlation matrix for model 1
+cormat_p1 <- ggplot(data = cormat1, aes(x = var1, y = var2, fill = Estimate)) +
+  geom_tile(
+    color = "white",
+    lwd = 1.5,
+    linetype = 1
+  ) +
+  geom_text(
+    aes(label = Estimate),
+    color = "black",
+    size = 6,
+  ) +
+  ggtitle("Model 1") +
+  scale_fill_gradient2(
+    breaks = seq(-1, 1, 0.5),
+    limits = c(-1, 1),
+    low = "#FF0000",
+    mid = "white",
+    high = "#075AFF"
+  ) +
+  theme_bw() +
+  custom_theme +
+  guides(fill = guide_colourbar(title = "Correlation\n"))
+
+# Correlation matrix for model 2
+cormat_p2 <- ggplot(data = cormat2, aes(x = var1, y = var2, fill = Estimate)) +
+  geom_tile(
+    color = "white",
+    lwd = 1.5,
+    linetype = 1
+  ) +
+  geom_text(
+    aes(label = Estimate),
+    color = "black",
+    size = 6,
+  ) +
+  ggtitle("Model 2") +
+  scale_fill_gradient2(
+    breaks = seq(-1, 1, 0.5),
+    limits = c(-1, 1),
+    low = "#FF0000",
+    mid = "white",
+    high = "#075AFF"
+  ) +
+  theme_bw() +
+  custom_theme +
+  guides(fill = guide_colourbar(title = "Correlation\n"))
+
+
+# Combine into one figure
+cormat_p <- ggarrange(
+  cormat_p1, cormat_p2,
+  ncol = 2, nrow = 1,
+  common.legend = TRUE,
+  legend = "bottom"
+)
+
+cormat_p
+```
+
+We see that there are structural changes in the correlations, with reversed signs when comparing the correlations of speed and space between model 1 and 2.
 
 
 ## Additional analyses : variance partitionning
@@ -1035,7 +1175,10 @@ courte description du partitionnement de la variance et pointer aux références
 
 # Summary: ecological inference
 
-Description des résultats obtenus et interprétations biologiques
+From our results it appears that different ecological processes are happening. First, we saw that controlling for the prey's behaviour changes the mean population behaviours. We also saw that controlling for the prey's behaviour changes the estimation of among individual behavioural differences. Importantly, we also see that there are important structural changes in the behavioural correlations.
+
+When we don't account for the prey's behaviour, we see that faster predators do not cover space faster in the environment. There is actually almost no relationship between these two traits. In terms of performance, faster predators take less time to capture their first prey, but those that cover space in the environment take more time. Thus, being faster appears to be the best strategy while not covering a lot of space. However, when we control for the prey's behaviour (i.e. remove the effect of the prey), this interpretation changes drastically. Now, the predator's speed and space coverage are strongly positively correlated, indicating that faster predators also cover space faster in the virtual environment. We also now see that in this organized into a tactic, where faster predators that cover more space at a fast pace are actually more performant than those that are slower. We thus have strong evidence that the prey are driving the predator's foraging tactics. This shows that because of the prey's movement, predators cannot be fast and cover a lot of space in the environment at the same time. If we did not account for the prey's behaviour, we would have not arrived to this conclusion, showing that the two interacting parties should be simultaneously analyzed if we want to draw proper conclusions.
+
 
 # References {.unnumbered}
 
