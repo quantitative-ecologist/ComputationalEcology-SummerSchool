@@ -8,9 +8,10 @@ Code repository for the behavioural ecology work package presented to participan
 
 In this repository you will find :
 
-- The .html documents presented during the R coding sessions
+- the .html documents presented during the R coding sessions
 - the .rmd documents used to generate the .html documents
-- the .pptx files used for the lectures
+- the .pptx files used for the lectures in the **lecture_docs** folder
+- the relevant literature in the **reading material.zip** folder
 
 You can download the full repository as a .zip folder and work with it directly in your computer.
 
