@@ -1162,12 +1162,12 @@ cormat_p <- ggarrange(
 cormat_p
 ```
 
-We see that there are structural changes in the correlations, with reversed signs when comparing the correlations of speed and space between model 1 and 2.
+We see that there are structural changes in the correlations, with reversed signs when comparing the correlations of speed and space between model 1 and 2. There is also a reversing of the correlation direction for space coverage and performance between model 1 and model 2.
 
 
 ## Additional analyses : variance partitionning
 
-courte description du partitionnement de la variance et pointer aux références pertinentes ou à mon article.
+see @FraserFranco.etal2022 for the results on variance partitionning.
 
 <br>
 
@@ -1175,9 +1175,13 @@ courte description du partitionnement de la variance et pointer aux références
 
 # Summary: ecological inference
 
-From our results it appears that different ecological processes are happening. First, we saw that controlling for the prey's behaviour changes the mean population behaviours. We also saw that controlling for the prey's behaviour changes the estimation of among individual behavioural differences. Importantly, we also see that there are important structural changes in the behavioural correlations.
+Our results suggest that different ecological processes are happening. First, we saw that controlling for the prey's behaviour changes the mean population behaviours. We also saw that controlling for the prey's behaviour changes the estimation of among individual behavioural differences. Importantly, we also see that there are important structural changes in the behavioural correlations.
 
-When we don't account for the prey's behaviour, we see that faster predators do not cover space faster in the environment. There is actually almost no relationship between these two traits. In terms of performance, faster predators take less time to capture their first prey, but those that cover space in the environment take more time. Thus, being faster appears to be the best strategy while not covering a lot of space. However, when we control for the prey's behaviour (i.e. remove the effect of the prey), this interpretation changes drastically. Now, the predator's speed and space coverage are strongly positively correlated, indicating that faster predators also cover space faster in the virtual environment. We also now see that in this organized into a tactic, where faster predators that cover more space at a fast pace are actually more performant than those that are slower. We thus have strong evidence that the prey are driving the predator's foraging tactics. This shows that because of the prey's movement, predators cannot be fast and cover a lot of space in the environment at the same time. If we did not account for the prey's behaviour, we would have not arrived to this conclusion, showing that the two interacting parties should be simultaneously analyzed if we want to draw proper conclusions.
+Overall, we can see that predators differ in their average speed. This means that some individuals were on average faster, while others were on average slower across the study. We also found among individual differences in performance, indicating that some individuals are faster at capturing their first prey than others. This means that we have the basic material for selection to act upon!
+
+When we don't account for the prey's behaviour, we see that faster predators do not cover space faster in the environment. There is actually almost no relationship between these two traits. In terms of performance, faster predators take less time to capture their first prey, indicating higher foraging performance. On the contrary, individuals that cover space in the environment at a faster pace perform poorly compared to those that cover space at a slower rate. Thus, being faster appears to be the best strategy while not covering a lot of space.
+
+However, when we control for the prey's behaviour (i.e. remove the effect of the prey), this interpretation changes drastically. Now, the predator's speed and space coverage are strongly positively correlated, indicating that faster predators also cover space faster in the virtual environment. We also now see that it is organized into a tactic, where faster predators that cover space faster perform better. We thus have strong evidence that the prey are driving the predator's foraging tactics. This indicates that because of the prey's movement, predators cannot be fast and cover a lot of space in the environment at the same time. If we did not account for the prey's behaviour, we would have not arrived to this conclusion, showing that the two interacting parties should be simultaneously analyzed if we want to draw proper conclusions.
 
 
 # References {.unnumbered}
