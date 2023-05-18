@@ -1,4 +1,5 @@
 ![](https://img.shields.io/badge/license-CC%20BY--NC%204.0-green?style=for-the-badge)
+<img src="logos/logo.png" width=60%>
 
 # **Computational Ecology Summer School**
 
