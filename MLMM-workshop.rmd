@@ -23,7 +23,7 @@ output:
     theme: flatly
     df_print: paged
     code_folding: hide
-bibliography: references.bib
+bibliography: refs-MLMM.bib
 nocite: |
   @McElreath2020
   @Burkner2017
