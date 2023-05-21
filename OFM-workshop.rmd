@@ -91,7 +91,7 @@ h2_in <- (10 / 60)     # handling time resource type 2 (min / marble)
 e1_in <- 5            # $ gained by consuming a resource of type 1 ($ / marble)
 e2_in <- 1            # $ gained by consuming a resource of type 2 ($ / marble)
 p1_in <- 1             # if marble of type 1 are taken, p = 1; 0 otherwise
-p2_in <- 0             # if marble of type 2 are taken, p = 1; 0 otherwise
+p2_in <- 1             # if marble of type 2 are taken, p = 1; 0 otherwise
 ```
 
 ## Building the model
@@ -141,7 +141,7 @@ We estimate the expected temporal changes in the number of marbles available at 
 
 ```{r}
 
-for (i in 1:(Tf)) {
+for (i in 1:(Tf - 1)) {
 
   N1_in_t <- N1_in_t -
             ((lambda_in * (N1_in_t / N_in_t) * p1_in) /
@@ -206,7 +206,7 @@ ggplot(data = dat, aes(x = x, y = y)) +
     xlab("\nResidence time (min)") +
     ylab("Total gain ($)\n") +
     scale_x_continuous(breaks = seq(0, 30, 6), limits = c(0, 30)) +
-    #scale_y_continuous(breaks = seq(0, 600, 150), limits = c(0, 600)) +
+    scale_y_continuous(breaks = seq(0, 60, 10), limits = c(7, 60)) +
     theme_bw(base_size = 15) +
     theme(panel.grid = element_blank())
 ```
@@ -338,7 +338,7 @@ ggplot(data = dat, aes(x = x, y = y)) +
     xlab("\nTime spent in a patch (min)") +
     ylab("Gain rate in each patch ($ / min)\n") +
     scale_x_continuous(breaks = seq(0, 30, 6), limits = c(5.5, 34)) +
-    scale_y_continuous(breaks = seq(0, 2.5, 0.5), limits = c(0, 2.5)) +
+    scale_y_continuous(breaks = seq(0, 3, 0.5), limits = c(0, 3)) +
     theme_bw(base_size = 15) +
     theme(panel.grid = element_blank())
 ```
