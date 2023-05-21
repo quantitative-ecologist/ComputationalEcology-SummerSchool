@@ -88,8 +88,8 @@ lambda_in <- (60 / 10) # searching rate when not handling (marbles that can be d
 h1_in <- (10 / 60)     # handling time resource type 1 (min / marble)
 h2_in <- (10 / 60)     # handling time resource type 2 (min / marble)
 
-e1_in <- 60            # $ gained by consuming a resource of type 1 ($ / marble)
-e2_in <- 10            # $ gained by consuming a resource of type 2 ($ / marble)
+e1_in <- 5            # $ gained by consuming a resource of type 1 ($ / marble)
+e2_in <- 1            # $ gained by consuming a resource of type 2 ($ / marble)
 p1_in <- 1             # if marble of type 1 are taken, p = 1; 0 otherwise
 p2_in <- 0             # if marble of type 2 are taken, p = 1; 0 otherwise
 ```
@@ -206,7 +206,7 @@ ggplot(data = dat, aes(x = x, y = y)) +
     xlab("\nResidence time (min)") +
     ylab("Total gain ($)\n") +
     scale_x_continuous(breaks = seq(0, 30, 6), limits = c(0, 30)) +
-    scale_y_continuous(breaks = seq(0, 600, 150), limits = c(0, 600)) +
+    #scale_y_continuous(breaks = seq(0, 600, 150), limits = c(0, 600)) +
     theme_bw(base_size = 15) +
     theme(panel.grid = element_blank())
 ```
@@ -338,7 +338,7 @@ ggplot(data = dat, aes(x = x, y = y)) +
     xlab("\nTime spent in a patch (min)") +
     ylab("Gain rate in each patch ($ / min)\n") +
     scale_x_continuous(breaks = seq(0, 30, 6), limits = c(5.5, 34)) +
-    scale_y_continuous(breaks = seq(0, 30, 6), limits = c(6, 30)) +
+    scale_y_continuous(breaks = seq(0, 2.5, 0.5), limits = c(0, 2.5)) +
     theme_bw(base_size = 15) +
     theme(panel.grid = element_blank())
 ```
