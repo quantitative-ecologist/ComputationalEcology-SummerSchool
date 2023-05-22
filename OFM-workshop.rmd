@@ -63,7 +63,7 @@ Optimal diet and optimal residency time can be combined in a hierarchical model 
 
 #### Multi-level foraging decisions of prey under predation risk in a landscape with refuges: How to become the richest possible! {.unnumbered}
 
-What are the optimal multi-level foraging decisions under these conditions? We estimate this optimality problem numerically through a two-step process. First, we estimate the gain that can be expected within patches from the different possible foraging decisions. Each set of decisions made in a given patch results in a specific gain $(g)$ achieved during the associated residence time $(t)$. Second, we use this information [$g(t), t$] as input to the inter-patch model to estimate the overall realized gain that can be expected during $T_{f}$ = 30 min, given the global mortality risk. Although a PowerPoint presentation details the modeling approach, below we summarize the general method through an example.
+What are the optimal multi-level foraging decisions under these conditions? We estimate this optimality problem numerically through a two-step process. First, we estimate the gain that can be expected within patches from the different possible foraging decisions. Each set of decisions made in a given patch results in a specific gain $(g)$ achieved during the associated residence time $(t)$. Second, we use this information [$g(t), t$] as input to the inter-patch model to estimate the overall realized gain that can be expected during $T_{f}$ = 30 min, given the global survival probability. Although a PowerPoint presentation details the modeling approach, below we summarize the general method through an example.
 <br>
 
 
@@ -249,7 +249,7 @@ Tr <- c(rep(Trx, each = length(hx)))
 
 Because you specifically have 30 min to collect marbles, we consider the behaviour you will be specifically doing when the time is up. For example, you may not be able to spent the time you wanted in the last patch. The approach below considers this possibility when calculating the overall gain that can be expected in 30 minutes. The model provides estimates of the optimal time spent in refuges, searching for marble patches, and collecting marbles in patches, given your foraging choice and the risk of predation.  
 
-As you will see, the model does not directly identify the optimal diet. To determine the most rewarding choice, all you have to do is estimate the long-term expected payouts if you collect only one type of marble, and if you collect both. You will then be able to directly see which strategy offers the highest expected gains. The model provides an estimate of the time that should be spent in refuges, at marble patches, and moving between patches, to maximize your gains, given the long-term mortality risk. 
+As you will see, the model does not directly identify the optimal diet. To determine the most rewarding choice, all you have to do is estimate the long-term expected payouts if you collect only one type of marble, and if you collect both. You will then be able to directly see which strategy offers the highest expected gains. The model provides an estimate of the time that should be spent in refuges, at marble patches, and moving between patches, to maximize your gains, given the long-term probability of survival. 
 
 ```{r}
 Alldata1 <- matrix(c(Tr, hpatcha, totgain1), nrow = (length(Tr)), ncol = 3)
@@ -367,7 +367,7 @@ Value_given_optimal_behaviour <- round(
 # time spent searching, handling, in refuge
 Variable <- c(
   "Realized gain ($)", "gain_no_pred",
-  "Overall mortality risk", "Patch resience time (min)",
+  "Overall survival probability", "Patch resience time (min)",
   "nb of patches fully handled", "Total time searching patches (min)",
   "Total time in patches (min)", "Total time in refuge (min)"
 )
