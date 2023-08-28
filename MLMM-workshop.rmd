@@ -422,7 +422,7 @@ hook_form2 <- bf(
 
 Lastly, the Bayesian approach requires that we define priors for the parameters that the models will estimate. In short, priors are a probability distribution indicating the prior plausibilities of an uncertain quantity before evidence is taken into account. They are usually assumed and carefully chosen based on the scientific knowledge of the system to help the model at estimating the parameters' posterior distributions. Thus, they can be seen as an assumption of how your system of interest works.
 
-Here is an example. Suppose that you want to estimate the relationship between species richness and forest cover using linear regression. Because we usually know that more habitat should support more species, we could use a prior on the slope term defined as a Gaussian distribution with mean of 0.5 and standard deviation of 1. This prior would be telling our model that the slope (relationship between species richness and land cover) should be positive with the most plausible value being 0.5, indicating a 0.5 unit increase in species richness for each unit of forest cover. This would be called a weakly informative prior, because the standard deviation of 1 still allows the model to search for a fair range of slope values around the mean of 0.5.
+Here is an example. Suppose that you want to estimate the relationship between species richness and forest cover using a generalized linear model. Because we usually know that more habitat should support more species, we could use a prior on the slope term defined as a Gaussian distribution with mean of 0.5 and standard deviation of 1. This prior would be telling our model that the slope (relationship between species richness and land cover) should be positive with a range of plausible values oscillating around 0.5, indicating a 0.5 unit increase in species richness for each unit of forest cover. This would be called a weakly informative prior, because the standard deviation of 1 still allows the model to search for a fair range of slope values around the mean of 0.5.
 
 Here is a simulated example to see what this prior looks like :
 ```{r sim-prior}
@@ -450,7 +450,7 @@ p1 <- ggplot(dat, aes(x = vec)) +
 p1
 ```
 
-You can see that the range of plausible values for the slope ranges from -2.31 to 3.74 with the most plausible value being 0.5 (i.e. the black dashed line).
+You can see that the distribution of plausible values for the slope ranges from -2.31 to 3.74. Values nearing 0.5 (i.e. the black dashed line) have a higher density, and thus, are more likely to be observed.
 
 In our case, because this was the first time that we modelled data in *Dead by Daylight*, we used weakly informative priors which impose constrains on the parameter estimation while also leaving it some freedom. Moreover, because we have a large dataset, the data should drive the posterior distribution of parameter values more than the prior. For more information on priors, see the relevant sections in @McElreath2020.
 
